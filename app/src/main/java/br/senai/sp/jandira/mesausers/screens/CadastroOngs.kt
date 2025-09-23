@@ -40,6 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @Composable
 fun CadastroOngs(modifier: Modifier = Modifier) {
@@ -214,7 +218,9 @@ fun CadastroOngs(modifier: Modifier = Modifier) {
                     )
                     Spacer(Modifier.padding(30.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+
+                        },
                         modifier = Modifier
                             .width(230.dp),
                         colors = ButtonDefaults.buttonColors(
