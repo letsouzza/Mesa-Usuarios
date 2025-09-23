@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Mesa+</string>
+    <string name="cadastrar">Cadastrar</string>
+    <string name="pessoa">Pessoa</string>
+    <string name="empresa">Empresa</string>
+    <string name="ongs">ONGs</string>
+    <string name="cadastre_se">Cadastre-se</string>
+    <string name="nome">Nome:</string>
+    <string name="email">Email:</string>
+    <string name="cpf">CPF:</string>
+    <string name="telefone">Telefone:</string>
+    <string name="senha">Senha:</string>
+    <string name="login">Login</string>
+    <string name="esqueci_senha">Esqueci minha senha</string>
+    <string name="escolha_login">Escolha o Login</string>
+    <string name="nao_tem_login">Não tem Login?</string>
+    <string name="entrar">Entrar</string>
+</resources>
