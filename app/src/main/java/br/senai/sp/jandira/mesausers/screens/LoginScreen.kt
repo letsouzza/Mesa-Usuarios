@@ -45,8 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
+import br.senai.sp.jandira.mesausers.model.LoginUsuarios
 import br.senai.sp.jandira.mesausers.screens.components.LoginDropdown
+import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @Composable
 fun LoginScreen(navegacao: NavHostController?) {
@@ -55,6 +61,12 @@ fun LoginScreen(navegacao: NavHostController?) {
     var senhaState by remember {mutableStateOf("")}
     var tipoLogin by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
+
+    val userApi = RetrofitFactory().getUserService()
+
+    var mostrarMensagemSucesso by remember { mutableStateOf(false) }
+
+    var tipoSelecioadoNome by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -203,7 +215,19 @@ fun LoginScreen(navegacao: NavHostController?) {
                     }
                     Spacer(Modifier.padding(15.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            val body = LoginUsuarios(
+                                email = emailState,
+                                senha = senhaState,
+                                tipoUsuario = tipoLogin
+                            )
+
+                            GlobalScope.launch(Dispatchers.IO){
+                                val login = userApi.login(body).await()
+                                mostrarMensagemSucesso = true
+                                println("deu CERTOOOOOOOO")
+                            }
+                        },
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(top = 30.dp)

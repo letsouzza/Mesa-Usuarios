@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.screens
 
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,8 +13,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
+import br.senai.sp.jandira.mesausers.model.UserCadastro
+import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @Composable
 fun CadastroUser(navegacao: NavHostController?) {
@@ -52,6 +62,18 @@ fun CadastroUser(navegacao: NavHostController?) {
     var telefoneState by remember {mutableStateOf("")}
     var senhaState by remember {mutableStateOf("")}
     var senhaVisivel by remember { mutableStateOf(false) }
+    var isNomeError by remember { mutableStateOf(false) }
+    var isEmailError by remember { mutableStateOf(false) }
+
+    var mostrarMensagemSucesso by remember { mutableStateOf(false) }
+
+    val userApi = RetrofitFactory().getUserService()
+
+    fun validar(): Boolean{
+        isNomeError = nameState.length < 3
+        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(emailState).matches()
+        return !isNomeError && !isEmailError
+    }
 
     Box(
         modifier = Modifier
@@ -111,6 +133,17 @@ fun CadastroUser(navegacao: NavHostController?) {
                                 color = Color(0x99000000)
                             )
                         },
+                        isError = isNomeError,
+                        supportingText = {
+                            if(isNomeError){
+                                Text(text = "Nome é obrigatório e deve ter no mínimo 3 caracters")
+                            }
+                        },
+                        trailingIcon = {
+                            if(isNomeError){
+                                Icon(imageVector = Icons.Default.Info, contentDescription = "")
+                            }
+                        },
                         modifier = Modifier
                             .width(315.dp)
 
@@ -130,20 +163,6 @@ fun CadastroUser(navegacao: NavHostController?) {
                             unfocusedTextColor = Color.Black
                         ),
                         shape = RoundedCornerShape(10.dp),
-                        trailingIcon = {
-                            val icon = if (senhaVisivel) Icons.Default.Visibility else Icons.Default.VisibilityOff
-
-                            IconButton(onClick = { senhaVisivel = !senhaVisivel }) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = "",
-                                    tint = Color(0xFF1B4227)
-                                )
-                            }
-                        },
-                        visualTransformation =
-                            if (senhaVisivel) VisualTransformation.None
-                            else PasswordVisualTransformation(),
                         label = {
                             Text(
                                 text = stringResource(
@@ -153,6 +172,17 @@ fun CadastroUser(navegacao: NavHostController?) {
                                 fontFamily = poppinsFamily,
                                 color = Color(0x99000000)
                             )
+                        },
+                        isError = isEmailError,
+                        supportingText = {
+                            if(isEmailError){
+                                Text(text = "Email é obrigatório")
+                            }
+                        },
+                        trailingIcon = {
+                            if(isEmailError){
+                                Icon(imageVector = Icons.Default.Info, contentDescription = "")
+                            }
                         },
                         modifier = Modifier
                             .width(315.dp)
@@ -231,6 +261,20 @@ fun CadastroUser(navegacao: NavHostController?) {
                             unfocusedTextColor = Color.Black
                         ),
                         shape = RoundedCornerShape(10.dp),
+                        trailingIcon = {
+                            val icon = if (senhaVisivel) Icons.Default.Visibility else Icons.Default.VisibilityOff
+
+                            IconButton(onClick = { senhaVisivel = !senhaVisivel }) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = "",
+                                    tint = Color(0xFF1B4227)
+                                )
+                            }
+                        },
+                        visualTransformation =
+                            if (senhaVisivel) VisualTransformation.None
+                            else PasswordVisualTransformation(),
                         label = {
                             Text(
                                 text = stringResource(
@@ -258,7 +302,25 @@ fun CadastroUser(navegacao: NavHostController?) {
                     )
                     Spacer(Modifier.padding(10.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            if (validar()){
+                                val body = UserCadastro(
+                                    nome = nameState,
+                                    email = emailState,
+                                    senha = senhaState,
+                                    telefone = telefoneState,
+                                    cpf = cpfState
+                                )
+
+                                GlobalScope.launch(Dispatchers.IO){
+                                    val userNovo = userApi.insertUser(body).await()
+                                    mostrarMensagemSucesso = true
+                                    println("deu CERTOOOOOOOO")
+                                }
+                            }else{
+                                println("******************** Dados errados")
+                            }
+                        },
                         modifier = Modifier
                             .width(230.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -275,6 +337,47 @@ fun CadastroUser(navegacao: NavHostController?) {
                     }
                 }
             }
+        }
+        if (mostrarMensagemSucesso){
+            AlertDialog(
+                onDismissRequest = {
+                    mostrarMensagemSucesso = false
+                },
+                title = {
+                    Text(
+                        text = "Sucesso",
+                        fontSize = 25.sp,
+                        fontFamily = poppinsFamily,
+                        fontWeight =  FontWeight.SemiBold,
+                        color = Color(0xFF1B4227)
+
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Empresa $nameState cadastrado com sucesso!",
+                        fontSize = 15.sp,
+                        fontFamily = poppinsFamily,
+                        color = Color(0x99000000)
+                    )
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            navegacao!!.navigate("login")
+                        }
+                    ){
+                        Text(
+                            text= "Ok",
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFamily,
+                            fontWeight =  FontWeight.SemiBold,
+                            color = Color(0xFF1B4227)
+                        )
+                    }
+                }
+            )
         }
     }
 }
