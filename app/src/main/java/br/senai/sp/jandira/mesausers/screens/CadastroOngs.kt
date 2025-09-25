@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -144,10 +145,11 @@ fun CadastroOngs(navegacao: NavHostController?) {
                             }
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(2.dp))
                     OutlinedTextField(
                         value = emailState,
                         onValueChange = { it ->
@@ -184,10 +186,11 @@ fun CadastroOngs(navegacao: NavHostController?) {
                             }
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(2.dp))
                     OutlinedTextField(
                         value = telefoneState,
                         onValueChange = { it ->
@@ -213,7 +216,8 @@ fun CadastroOngs(navegacao: NavHostController?) {
                             )
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
                     Spacer(Modifier.padding(5.dp))
@@ -256,7 +260,8 @@ fun CadastroOngs(navegacao: NavHostController?) {
                             )
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
                     )
                     Spacer(Modifier.padding(5.dp))
                     Text(
@@ -324,7 +329,7 @@ fun CadastroOngs(navegacao: NavHostController?) {
                 },
                 text = {
                     Text(
-                        text = "Empresa $nameState cadastrado com sucesso!",
+                        text = "ONG $nameState cadastrada com sucesso!",
                         fontSize = 15.sp,
                         fontFamily = poppinsFamily,
                         color = Color(0x99000000)

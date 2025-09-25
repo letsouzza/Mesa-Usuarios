@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -108,7 +109,7 @@ fun CadastroUser(navegacao: NavHostController?) {
                         fontWeight =  FontWeight.Normal,
                         color = Color(0xFF1B4227)
                     )
-                    Spacer(Modifier.padding(7.dp))
+                    Spacer(Modifier.padding(8.dp))
                     OutlinedTextField(
                         value = nameState,
                         onValueChange = { it ->
@@ -145,10 +146,11 @@ fun CadastroUser(navegacao: NavHostController?) {
                             }
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(2.dp))
                     OutlinedTextField(
                         value = emailState,
                         onValueChange = { it ->
@@ -185,10 +187,11 @@ fun CadastroUser(navegacao: NavHostController?) {
                             }
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(2.dp))
                     OutlinedTextField(
                         value = cpfState,
                         onValueChange = { it ->
@@ -214,7 +217,8 @@ fun CadastroUser(navegacao: NavHostController?) {
                             )
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
                     Spacer(Modifier.padding(5.dp))
@@ -243,7 +247,8 @@ fun CadastroUser(navegacao: NavHostController?) {
                             )
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
 
                     )
                     Spacer(Modifier.padding(5.dp))
@@ -286,7 +291,8 @@ fun CadastroUser(navegacao: NavHostController?) {
                             )
                         },
                         modifier = Modifier
-                            .width(315.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp)
                     )
                     Spacer(Modifier.padding(5.dp))
                     Text(
@@ -355,7 +361,7 @@ fun CadastroUser(navegacao: NavHostController?) {
                 },
                 text = {
                     Text(
-                        text = "Empresa $nameState cadastrado com sucesso!",
+                        text = "Usuário $nameState cadastrado com sucesso!",
                         fontSize = 15.sp,
                         fontFamily = poppinsFamily,
                         color = Color(0x99000000)

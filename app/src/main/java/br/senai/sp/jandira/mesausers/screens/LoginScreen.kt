@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -27,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,8 +68,6 @@ fun LoginScreen(navegacao: NavHostController?) {
 
     var mostrarMensagemSucesso by remember { mutableStateOf(false) }
 
-    var tipoSelecioadoNome by remember { mutableStateOf<String?>(null) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -103,7 +103,7 @@ fun LoginScreen(navegacao: NavHostController?) {
                         modifier= Modifier
                             .padding(start = 20.dp)
                     )
-                    Spacer(Modifier.padding(20.dp))
+                    Spacer(Modifier.padding(10.dp))
                     OutlinedTextField(
                         value = emailState,
                         onValueChange = { it ->
@@ -131,7 +131,7 @@ fun LoginScreen(navegacao: NavHostController?) {
                         modifier = Modifier
                             .fillMaxWidth()
                     )
-                    Spacer(Modifier.padding(15.dp))
+                    Spacer(Modifier.padding(10.dp))
                     OutlinedTextField(
                         value = senhaState,
                         onValueChange = { it ->
@@ -186,7 +186,10 @@ fun LoginScreen(navegacao: NavHostController?) {
                     )
                     Spacer(Modifier.padding(8.dp))
                     Column {
-                        LoginDropdown()
+                        LoginDropdown(
+                            selectedText = tipoLogin,
+                            onOptionSelected = { tipoLogin = it }
+                        )
                     }
                     Spacer(Modifier.padding(20.dp))
                     Row(
@@ -213,13 +216,13 @@ fun LoginScreen(navegacao: NavHostController?) {
                                 .clickable{navegacao!!.navigate("escolherCadastro")}
                         )
                     }
-                    Spacer(Modifier.padding(15.dp))
+                    Spacer(Modifier.padding(5.dp))
                     Button(
                         onClick = {
                             val body = LoginUsuarios(
                                 email = emailState,
                                 senha = senhaState,
-                                tipoUsuario = tipoLogin
+                                tipo = tipoLogin
                             )
 
                             GlobalScope.launch(Dispatchers.IO){
@@ -244,6 +247,47 @@ fun LoginScreen(navegacao: NavHostController?) {
                     }
                 }
             }
+        }
+        if (mostrarMensagemSucesso){
+            AlertDialog(
+                onDismissRequest = {
+                    mostrarMensagemSucesso = false
+                },
+                title = {
+                    Text(
+                        text = "Mesa+",
+                        fontSize = 25.sp,
+                        fontFamily = poppinsFamily,
+                        fontWeight =  FontWeight.SemiBold,
+                        color = Color(0xFF1B4227)
+
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Bem vindo ao nosso App!",
+                        fontSize = 15.sp,
+                        fontFamily = poppinsFamily,
+                        color = Color(0x99000000)
+                    )
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            navegacao!!.navigate("splash")
+                        }
+                    ){
+                        Text(
+                            text= "Ok",
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFamily,
+                            fontWeight =  FontWeight.SemiBold,
+                            color = Color(0xFF1B4227)
+                        )
+                    }
+                }
+            )
         }
     }
 }

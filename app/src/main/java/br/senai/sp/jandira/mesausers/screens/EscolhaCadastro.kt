@@ -87,8 +87,9 @@ fun EscolhaCadastro(navegacao: NavHostController?) {
                     )
                     Column(
                         modifier = Modifier
-                            .align(Alignment.Start)
-                            .padding(top = 70.dp)
+                            .fillMaxSize()
+                            .align(Alignment.Start),
+                        verticalArrangement = Arrangement.Bottom
                     ){
                         IconButton(
                             onClick = {navegacao!!.navigate("login")},

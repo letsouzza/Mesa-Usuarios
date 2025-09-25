@@ -23,9 +23,10 @@ import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginDropdown(
-) {
+    selectedText: String,
+    onOptionSelected: (String) -> Unit
+){
     var expanded by remember { mutableStateOf(false) }
-    var selectedText by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -87,7 +88,7 @@ fun LoginDropdown(
                         )
                     },
                     onClick = {
-                        selectedText = "pessoa"
+                        onOptionSelected("pessoa")
                         expanded = false
                     }
                 )
@@ -108,7 +109,7 @@ fun LoginDropdown(
                         )
                     },
                     onClick = {
-                        selectedText = "ong"
+                        onOptionSelected("ong")
                         expanded = false
                     }
                 )
@@ -117,8 +118,8 @@ fun LoginDropdown(
     }
 }
 
-@Preview
-@Composable
-private fun DropDownItemPreview() {
-    LoginDropdown()
-}
+//@Preview
+//@Composable
+//private fun DropDownItemPreview() {
+//    LoginDropdown()
+//}
