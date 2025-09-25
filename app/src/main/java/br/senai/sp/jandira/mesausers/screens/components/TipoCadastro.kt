@@ -28,11 +28,12 @@ import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 @Composable
 fun TipoCadastro(
     image: Painter,
-    text: String
+    text: String,
+    click: () -> Unit
 ) {
 
     Button(
-        onClick = {},
+        onClick = click,
         modifier = Modifier
             .width(330.dp)
             .height(110.dp)
@@ -68,5 +69,5 @@ fun TipoCadastro(
 @Preview
 @Composable
 private fun TipoCadastroPreview() {
-    TipoCadastro(image = painterResource(R.drawable.pessoa), text = "Pessoa")
+    TipoCadastro(image = painterResource(R.drawable.pessoa), text = "Pessoa", click = {})
 }

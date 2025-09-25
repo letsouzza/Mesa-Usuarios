@@ -2,6 +2,7 @@ package br.senai.sp.jandira.mesausers.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,11 +39,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 
 @Composable
-fun CadastroUser(modifier: Modifier = Modifier) {
+fun CadastroUser(navegacao: NavHostController?) {
 
     var nameState by remember {mutableStateOf("")}
     var emailState by remember {mutableStateOf("")}
@@ -57,7 +59,7 @@ fun CadastroUser(modifier: Modifier = Modifier) {
             .background(Color(0xFF1B4227))
     ){
         Column(
-            modifier.fillMaxSize()
+            modifier= Modifier.fillMaxSize()
         ){
             Card(
                 modifier = Modifier
@@ -242,6 +244,18 @@ fun CadastroUser(modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .width(315.dp)
                     )
+                    Spacer(Modifier.padding(5.dp))
+                    Text(
+                        text = stringResource(R.string.ja_tem_login),
+                        fontSize = 14.sp,
+                        fontFamily = poppinsFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1B4227),
+                        modifier = Modifier
+                            .clickable{navegacao?.navigate("login")}
+                            .align(Alignment.End)
+                            .padding(end = 25.dp)
+                    )
                     Spacer(Modifier.padding(10.dp))
                     Button(
                         onClick = {},
@@ -268,5 +282,5 @@ fun CadastroUser(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun CadastroUserPreview() {
-    CadastroUser()
+    CadastroUser(null)
 }

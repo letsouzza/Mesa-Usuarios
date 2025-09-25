@@ -2,6 +2,7 @@ package br.senai.sp.jandira.mesausers.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,12 +43,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.screens.components.LoginDropdown
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(navegacao: NavHostController?) {
 
     var emailState by remember {mutableStateOf("")}
     var senhaState by remember {mutableStateOf("")}
@@ -67,19 +69,19 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             Image(
                 painter = painterResource(R.drawable.logoclara),
                 contentDescription = "",
-                modifier.padding(10.dp).size(305.dp)
+                modifier = Modifier.padding(10.dp).size(330.dp)
             )
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(580.dp),
+                    .height(700.dp),
                 colors = CardDefaults.cardColors(Color(0xFFFFF9EB)),
                 shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp)
             ){
                 Column(
-                    modifier.fillMaxSize().padding(20.dp)
+                    modifier = Modifier.fillMaxSize().padding(20.dp)
                 ){
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(10.dp))
                     Text(
                         text= stringResource(R.string.login),
                         fontSize = 40.sp,
@@ -89,7 +91,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                         modifier= Modifier
                             .padding(start = 20.dp)
                     )
-                    Spacer(Modifier.padding(15.dp))
+                    Spacer(Modifier.padding(20.dp))
                     OutlinedTextField(
                         value = emailState,
                         onValueChange = { it ->
@@ -117,7 +119,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                     )
-                    Spacer(Modifier.padding(10.dp))
+                    Spacer(Modifier.padding(15.dp))
                     OutlinedTextField(
                         value = senhaState,
                         onValueChange = { it ->
@@ -170,10 +172,11 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                             .align(Alignment.End)
                             .padding(end = 25.dp)
                     )
+                    Spacer(Modifier.padding(8.dp))
                     Column {
                         LoginDropdown()
                     }
-                    Spacer(Modifier.padding(5.dp))
+                    Spacer(Modifier.padding(20.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -193,9 +196,12 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                             fontSize = 16.sp,
                             fontFamily = poppinsFamily,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1B4227)
+                            color = Color(0xFF1B4227),
+                            modifier = Modifier
+                                .clickable{navegacao!!.navigate("escolherCadastro")}
                         )
                     }
+                    Spacer(Modifier.padding(15.dp))
                     Button(
                         onClick = {},
                         modifier = Modifier
@@ -221,5 +227,5 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun LoginScreenPreview() {
-    LoginScreen()
+    LoginScreen(null)
 }

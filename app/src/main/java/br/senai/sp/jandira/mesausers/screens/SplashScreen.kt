@@ -27,10 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(navegacao: NavHostController?) {
 
     var visible by remember { mutableStateOf(false) }
 
@@ -68,7 +69,7 @@ fun SplashScreen() {
             )
         }
         IconButton(
-            onClick = {},
+            onClick = {navegacao!!.navigate("login")},
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -78,7 +79,7 @@ fun SplashScreen() {
                 contentDescription = "",
                 tint = Color(0xFFFFE6B1),
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(160.dp)
             )
         }
     }
@@ -87,7 +88,7 @@ fun SplashScreen() {
 @Preview()
 @Composable
 private fun SplashScreenPreview() {
-    SplashScreen()
+    SplashScreen(null)
 //    Mobile_tccTheme(darkTheme = true) {
 //        SplashScreen()
 //    }

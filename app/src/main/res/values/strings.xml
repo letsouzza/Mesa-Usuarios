@@ -14,5 +14,6 @@
     <string name="esqueci_senha">Esqueci minha senha</string>
     <string name="escolha_login">Escolha o Login</string>
     <string name="nao_tem_login">Não tem Login?</string>
+    <string name="ja_tem_login">Já tem um Login?</string>
     <string name="entrar">Entrar</string>
 </resources>
