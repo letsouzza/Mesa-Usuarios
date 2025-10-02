@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
+import br.senai.sp.jandira.mesausers.screens.components.LoginDropdown
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 
 @Composable
@@ -51,6 +52,7 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
     var emailState by remember {mutableStateOf("")}
     var isEmailError by remember { mutableStateOf(false) }
     var mostrarMensagemSucesso by remember { mutableStateOf(false) }
+    var tipoLogin by remember { mutableStateOf("") }
 
     fun validar(): Boolean{
         isEmailError = !Patterns.EMAIL_ADDRESS.matcher(emailState).matches()
@@ -133,6 +135,15 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                             }
                         }
                     )
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                    ){
+                        LoginDropdown(
+                            selectedText = tipoLogin,
+                            onOptionSelected = { tipoLogin = it }
+                        )
+                    }
                     Button(
                         onClick = {
                             mostrarMensagemSucesso = true
