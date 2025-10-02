@@ -18,6 +18,11 @@
     <string name="entrar">Entrar</string>
     <string name="recuperacao_senha">Recuperação de Senha</string>
     <string name="recuperar">Recuperar</string>
+    <string name="atualizacao_senha">Atualização de Senha</string>
+    <string name="atualizar">Atualizar</string>
     <string name="codigo">Insira o código</string>
     <string name="validar_codigo">Validar código</string>
+    <string name="reenviar_codigo">Reenviar código</string>
+    <string name="nova_senha">Nova senha:</string>
+    <string name="confirmar_senha">Confirmar senha:</string>
 </resources>

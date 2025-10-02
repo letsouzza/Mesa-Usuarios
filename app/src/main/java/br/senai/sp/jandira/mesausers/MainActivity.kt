@@ -7,8 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import br.senai.sp.jandira.mesaparceiros.screens.RecuperacaoSenha
+import br.senai.sp.jandira.mesausers.screens.AtualizacaoSenha
 import br.senai.sp.jandira.mesausers.screens.CadastroOngs
 import br.senai.sp.jandira.mesausers.screens.CadastroUser
+import br.senai.sp.jandira.mesausers.screens.CodigoSenha
 import br.senai.sp.jandira.mesausers.screens.EscolhaCadastro
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
 import br.senai.sp.jandira.mesausers.screens.SplashScreen
@@ -28,6 +31,9 @@ class MainActivity : ComponentActivity() {
                 composable(route = "cadastroOngs"){ CadastroOngs(navegacao) }
                 composable(route = "escolherCadastro"){ EscolhaCadastro(navegacao) }
                 composable(route = "splash"){ SplashScreen(navegacao) }
+                composable(route = "recuperacao"){ RecuperacaoSenha(navegacao) }
+                composable(route = "codigo"){ CodigoSenha(navegacao) }
+                composable(route = "atualizarSenha"){ AtualizacaoSenha(navegacao) }
             }
         }
     }

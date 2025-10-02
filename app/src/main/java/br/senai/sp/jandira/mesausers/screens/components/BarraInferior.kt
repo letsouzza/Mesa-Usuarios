@@ -27,7 +27,7 @@ fun BarraInferior(controleNavegacao: NavHostController?) {
     ){
         NavigationBarItem(
             onClick = {
-                controleNavegacao!!.navigate("conteudo")
+                controleNavegacao!!.navigate("login")
             },
             selected = false,
             icon = {

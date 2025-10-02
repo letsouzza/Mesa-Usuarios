@@ -42,7 +42,7 @@ import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 
 @Composable
-fun RecuperacaoSenha(navegacao: NavHostController?) {
+fun CodigoSenha(navegacao: NavHostController?) {
 
     var controleNavegacao = rememberNavController()
     var codigoState by remember {mutableStateOf("")}
@@ -87,42 +87,53 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                         modifier= Modifier
                             .padding(start = 20.dp)
                     )
-                    BasicTextField(
-                        value = codigoState,
-                        onValueChange = { codigoState = it },
-                        singleLine = true,
-                        textStyle = LocalTextStyle.current.copy(
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            fontFamily = poppinsFamily
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 15.dp) // 👈 padding lateral
-                            .border(
-                                width = 3.dp, // 👈 borda grossa
-                                color = Color(0xFFFFE6B1),
-                                shape = RoundedCornerShape(30.dp)
-                            )
-                            .background(Color.White, shape = RoundedCornerShape(30.dp))
-                            .padding(horizontal = 16.dp, vertical = 12.dp), // 👈 espaço interno
-                        decorationBox = { innerTextField ->
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                if (codigoState.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.codigo), // 👈 label dentro do campo
-                                        fontSize = 20.sp,
-                                        fontFamily = poppinsFamily,
-                                        color = Color(0x99000000)
-                                    )
+                    Column {
+                        BasicTextField(
+                            value = codigoState,
+                            onValueChange = { codigoState = it },
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                fontFamily = poppinsFamily
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 15.dp)
+                                .border(
+                                    width = 3.dp,
+                                    color = Color(0xFFFFE6B1),
+                                    shape = RoundedCornerShape(30.dp)
+                                )
+                                .background(Color.White, shape = RoundedCornerShape(30.dp))
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (codigoState.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.codigo),
+                                            fontSize = 20.sp,
+                                            fontFamily = poppinsFamily,
+                                            color = Color(0x99000000)
+                                        )
+                                    }
+                                    innerTextField()
                                 }
-                                innerTextField()
                             }
-                        }
-                    )
+                        )
+                        Text(
+                            text = stringResource(R.string.reenviar_codigo),
+                            fontSize = 16.sp,
+                            fontFamily = poppinsFamily,
+                            fontWeight = FontWeight.Bold,
+                            color= Color(0x99000000),
+                            modifier = Modifier
+                                .padding(start = 30.dp, top = 10.dp)
+                        )
+                    }
                     Button(
                         onClick = {
 
@@ -150,6 +161,6 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
 
 @Preview
 @Composable
-private fun RecuperacaoSenhaPreview() {
-    RecuperacaoSenha(null)
+private fun CodigoSenhaPreview() {
+    CodigoSenha(null)
 }

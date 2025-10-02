@@ -183,6 +183,7 @@ fun LoginScreen(navegacao: NavHostController?) {
                         modifier = Modifier
                             .align(Alignment.End)
                             .padding(end = 25.dp)
+                            .clickable{navegacao!!.navigate("recuperacao")}
                     )
                     Spacer(Modifier.padding(8.dp))
                     Column {

@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesaparceiros.screens
 
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,12 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +49,13 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
 
     var controleNavegacao = rememberNavController()
     var emailState by remember {mutableStateOf("")}
+    var isEmailError by remember { mutableStateOf(false) }
+    var mostrarMensagemSucesso by remember { mutableStateOf(false) }
+
+    fun validar(): Boolean{
+        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(emailState).matches()
+        return !isEmailError
+    }
 
     Box(
         modifier = Modifier
@@ -98,14 +108,14 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 15.dp) // 👈 padding lateral
+                            .padding(horizontal = 15.dp)
                             .border(
-                                width = 3.dp, // 👈 borda grossa
+                                width = 3.dp,
                                 color = Color(0xFFFFE6B1),
                                 shape = RoundedCornerShape(30.dp)
                             )
                             .background(Color.White, shape = RoundedCornerShape(30.dp))
-                            .padding(horizontal = 16.dp, vertical = 12.dp), // 👈 espaço interno
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
@@ -113,7 +123,7 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                             ) {
                                 if (emailState.isEmpty()) {
                                     Text(
-                                        text = "Email", // 👈 label dentro do campo
+                                        text = stringResource(R.string.email),
                                         fontSize = 20.sp,
                                         fontFamily = poppinsFamily,
                                         color = Color(0x99000000)
@@ -125,7 +135,7 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                     )
                     Button(
                         onClick = {
-
+                            mostrarMensagemSucesso = true
                         },
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
@@ -144,6 +154,47 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                     BarraInferior(controleNavegacao)
                 }
             }
+        }
+        if (mostrarMensagemSucesso){
+            AlertDialog(
+                onDismissRequest = {
+                    mostrarMensagemSucesso = false
+                },
+                title = {
+                    Text(
+                        text = "Aviso",
+                        fontSize = 25.sp,
+                        fontFamily = poppinsFamily,
+                        fontWeight =  FontWeight.SemiBold,
+                        color = Color(0xFF1B4227)
+
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Código enviado para seu email!",
+                        fontSize = 15.sp,
+                        fontFamily = poppinsFamily,
+                        color = Color(0x99000000)
+                    )
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            navegacao!!.navigate("codigo")
+                        }
+                    ){
+                        Text(
+                            text= "Ok",
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFamily,
+                            fontWeight =  FontWeight.SemiBold,
+                            color = Color(0xFF1B4227)
+                        )
+                    }
+                }
+            )
         }
     }
 }
