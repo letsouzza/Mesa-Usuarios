@@ -16,4 +16,8 @@
     <string name="nao_tem_login">Não tem Login?</string>
     <string name="ja_tem_login">Já tem um Login?</string>
     <string name="entrar">Entrar</string>
+    <string name="recuperacao_senha">Recuperação de Senha</string>
+    <string name="recuperar">Recuperar</string>
+    <string name="codigo">Insira o código</string>
+    <string name="validar_codigo">Validar código</string>
 </resources>
