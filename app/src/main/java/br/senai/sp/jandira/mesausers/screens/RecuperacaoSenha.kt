@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesaparceiros.screens
 
+import android.content.Context
 import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,9 +43,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import br.senai.sp.jandira.mesausers.R
+import br.senai.sp.jandira.mesausers.model.RecuperarSenha
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.screens.components.LoginDropdown
+import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @Composable
 fun RecuperacaoSenha(navegacao: NavHostController?) {
@@ -58,6 +66,12 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
         isEmailError = !Patterns.EMAIL_ADDRESS.matcher(emailState).matches()
         return !isEmailError
     }
+
+    val senhaApi = RetrofitFactory().getSenhaService()
+
+    val context = LocalContext.current
+    val userFile = context.getSharedPreferences("user_file", Context.MODE_PRIVATE)
+    val editor = userFile.edit()
 
     Box(
         modifier = Modifier
@@ -146,7 +160,21 @@ fun RecuperacaoSenha(navegacao: NavHostController?) {
                     }
                     Button(
                         onClick = {
-                            mostrarMensagemSucesso = true
+                            val body = RecuperarSenha(
+                                email = emailState,
+                                tipo = tipoLogin,
+                            )
+                            println(body)
+
+                            GlobalScope.launch(Dispatchers.IO){
+                                val recuperar = senhaApi.sendEmail(body).await()
+                                mostrarMensagemSucesso = true
+                                println("deu CERTOOOOOOOO")
+                            }
+
+                            editor.putString("email", emailState)
+                            editor.putString("tipo", tipoLogin)
+                            editor.apply()
                         },
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)

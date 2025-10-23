@@ -1,7 +1,7 @@
 package br.senai.sp.jandira.mesausers.model
 
-data class CodigoRecuperacao(
+data class EsqueciSenha(
     var email: String = "",
     var tipo: String = "",
-    var codigo: String = ""
+    var senha: String = ""
 )
