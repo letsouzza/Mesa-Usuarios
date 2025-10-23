@@ -25,4 +25,8 @@ interface SenhaService {
     @Headers("Content-Type: application/json")
     @PUT("nova-senha")
     fun atualizarSenha(@Body senha: EsqueciSenha): Call<ResponseGeral>
+
+    @Headers("Content-Type: application/json")
+    @PUT("apagar-codigo")
+    fun apagarCodigo(@Body apagar: RecuperarSenha): Call<ResponseGeral>
 }

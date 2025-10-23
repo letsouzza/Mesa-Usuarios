@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import br.senai.sp.jandira.mesaparceiros.screens.RecuperacaoSenha
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.model.CodigoRecuperacao
 import br.senai.sp.jandira.mesausers.model.RecuperarSenha
@@ -201,10 +202,42 @@ fun CodigoSenha(navegacao: NavHostController?) {
                                 codigo = codigoState,
                             )
 
-                            GlobalScope.launch(Dispatchers.IO){
-                                val codigo = senhaApi.sendCodigo(body).await()
-                                mostrarMensagemSucesso = true
-                                println("deu CERTOOOOOOOO")
+                            GlobalScope.launch(Dispatchers.IO) {
+                                try {
+                                    val codigoResponse = senhaApi.sendCodigo(body).await()
+
+                                    if (codigoResponse.status) {
+                                        // Código válido → apagar o código na API
+                                        val apagarBody = RecuperarSenha(
+                                            email = "$emailState",
+                                            tipo = "$tipoState"
+                                        )
+
+                                        val apagarResponse = senhaApi.apagarCodigo(apagarBody).await()
+
+                                        if (apagarResponse.status) {
+                                            withContext(Dispatchers.Main) {
+                                                mostrarMensagemSucesso = true
+                                            }
+                                        }
+                                    } else {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                "Código incorreto. Tente novamente.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            context,
+                                            "Erro: ${e.message}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier
