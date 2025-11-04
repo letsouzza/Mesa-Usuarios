@@ -276,7 +276,7 @@ fun LoginScreen(navegacao: NavHostController?) {
                 dismissButton = {
                     TextButton(
                         onClick = {
-                            navegacao!!.navigate("splash")
+                            navegacao!!.navigate("home")
                         }
                     ){
                         Text(

@@ -1,21 +1,31 @@
 <resources>
     <string name="app_name">Mesa+</string>
+    <string name="subtitulo">Combatendo o desperdício e a fome</string>
     <string name="cadastrar">Cadastrar</string>
-    <string name="pessoa">Pessoa</string>
     <string name="empresa">Empresa</string>
+    <string name="pessoa">Pessoa</string>
     <string name="ongs">ONGs</string>
+    <string name="escolha_login">Escolha o login</string>
     <string name="cadastre_se">Cadastre-se</string>
     <string name="nome">Nome:</string>
     <string name="email">Email:</string>
+    <string name="cnpj">CNPJ:</string>
     <string name="cpf">CPF:</string>
     <string name="telefone">Telefone:</string>
     <string name="senha">Senha:</string>
     <string name="login">Login</string>
     <string name="esqueci_senha">Esqueci minha senha</string>
-    <string name="escolha_login">Escolha o Usuário</string>
     <string name="nao_tem_login">Não tem Login?</string>
     <string name="ja_tem_login">Já tem um Login?</string>
     <string name="entrar">Entrar</string>
+    <string name="cadastro_alimento">Cadastrar \n Alimento</string>
+    <string name="descricao">Descrição:</string>
+    <string name="categoria">Categoria:</string>
+    <string name="proximo">Próximo</string>
+    <string name="foto">Foto:</string>
+    <string name="quantidade">Quantidade:</string>
+    <string name="prazo">Prazo de validade:</string>
+    <string name="peso">Peso:</string>
     <string name="recuperacao_senha">Recuperação de Senha</string>
     <string name="recuperar">Recuperar</string>
     <string name="atualizacao_senha">Atualização de Senha</string>
@@ -25,4 +35,13 @@
     <string name="reenviar_codigo">Reenviar código</string>
     <string name="nova_senha">Nova senha:</string>
     <string name="confirmar_senha">Confirmar senha:</string>
+    <string name="qnt">Qnt: </string>
+    <string name="prazo_curto">Prazo: </string>
+    <string name="categorias">Categorias</string>
+    <string name="instituicoes">Instituições</string>
+    <string name="filtros">Filtros</string>
+    <string name="filtrar_por_empresa">Filtrar por empresa</string>
+    <string name="filtrar_por_data">Filtrar por data de validade</string>
+    <string name="filtrar">Filtrar</string>
+    <string name="all">All</string>
 </resources>

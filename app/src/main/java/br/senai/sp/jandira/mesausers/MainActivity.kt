@@ -13,6 +13,7 @@ import br.senai.sp.jandira.mesausers.screens.CadastroOngs
 import br.senai.sp.jandira.mesausers.screens.CadastroUser
 import br.senai.sp.jandira.mesausers.screens.CodigoSenha
 import br.senai.sp.jandira.mesausers.screens.EscolhaCadastro
+import br.senai.sp.jandira.mesausers.screens.HomeScreen
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
 import br.senai.sp.jandira.mesausers.screens.SplashScreen
 
@@ -34,6 +35,7 @@ class MainActivity : ComponentActivity() {
                 composable(route = "recuperacao"){ RecuperacaoSenha(navegacao) }
                 composable(route = "codigo"){ CodigoSenha(navegacao) }
                 composable(route = "atualizarSenha"){ AtualizacaoSenha(navegacao) }
+                composable(route = "home"){ HomeScreen(navegacao) }
             }
         }
     }
