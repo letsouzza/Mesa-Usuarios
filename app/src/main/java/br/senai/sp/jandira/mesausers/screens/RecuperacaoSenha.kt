@@ -1,4 +1,4 @@
-package br.senai.sp.jandira.mesaparceiros.screens
+package br.senai.sp.jandira.mesausers.screens
 
 import android.content.Context
 import android.util.Patterns

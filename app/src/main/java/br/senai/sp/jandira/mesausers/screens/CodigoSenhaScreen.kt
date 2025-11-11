@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import br.senai.sp.jandira.mesaparceiros.screens.RecuperacaoSenha
+import br.senai.sp.jandira.mesausers.screens.RecuperacaoSenha
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.model.CodigoRecuperacao
 import br.senai.sp.jandira.mesausers.model.RecuperarSenha

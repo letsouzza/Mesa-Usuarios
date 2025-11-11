@@ -7,13 +7,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import br.senai.sp.jandira.mesaparceiros.screens.RecuperacaoSenha
+import br.senai.sp.jandira.mesausers.screens.HomeScreen
+import br.senai.sp.jandira.mesausers.screens.RecuperacaoSenha
 import br.senai.sp.jandira.mesausers.screens.AtualizacaoSenha
 import br.senai.sp.jandira.mesausers.screens.CadastroOngs
 import br.senai.sp.jandira.mesausers.screens.CadastroUser
 import br.senai.sp.jandira.mesausers.screens.CodigoSenha
+import br.senai.sp.jandira.mesausers.screens.DetalhesScreen
 import br.senai.sp.jandira.mesausers.screens.EscolhaCadastro
-import br.senai.sp.jandira.mesausers.screens.HomeScreen
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
 import br.senai.sp.jandira.mesausers.screens.SplashScreen
 
@@ -25,7 +26,7 @@ class MainActivity : ComponentActivity() {
             val navegacao = rememberNavController()
             NavHost(
                 navController = navegacao,
-                startDestination = "splash"
+                startDestination = "home"
             ){
                 composable(route = "login"){ LoginScreen(navegacao) }
                 composable(route = "cadastroUser"){ CadastroUser(navegacao) }
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
                 composable(route = "codigo"){ CodigoSenha(navegacao) }
                 composable(route = "atualizarSenha"){ AtualizacaoSenha(navegacao) }
                 composable(route = "home"){ HomeScreen(navegacao) }
+                composable(route = "detalhes"){ DetalhesScreen(navegacao) }
             }
         }
     }

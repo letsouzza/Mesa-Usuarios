@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.ui.theme.MesaTheme
@@ -41,7 +42,7 @@ fun BarraDeTitulo(modifier: Modifier = Modifier) {
                         .padding(4.dp)
                         .size(55.dp),
                     shape = CircleShape,
-                    colors = CardDefaults.cardColors(MaterialTheme.colorScheme.onBackground)
+                    colors = CardDefaults.cardColors(Color(0xFF1B4227))
                 ){
                     Image(
                         painter = painterResource(R.drawable.logoclara),
@@ -67,7 +68,7 @@ fun BarraDeTitulo(modifier: Modifier = Modifier) {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.onBackground
+            containerColor = Color(0xFF1B4227)
         )
     )
 

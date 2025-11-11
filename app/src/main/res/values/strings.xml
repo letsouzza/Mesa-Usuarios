@@ -44,4 +44,8 @@
     <string name="filtrar_por_data">Filtrar por data de validade</string>
     <string name="filtrar">Filtrar</string>
     <string name="all">All</string>
+    <string name="detalhes">Detalhes</string>
+    <string name="data_validade">Data de Validade:</string>
+    <string name="adicionar_carrinho">Adicionar ao carrinho</string>
+    <string name="km">km</string>
 </resources>
