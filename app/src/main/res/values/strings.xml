@@ -56,4 +56,15 @@
     <string name="atualizar_senha">Atualizar Senha</string>
     <string name="editar">Editar</string>
     <string name="salvar_modificacoes">Salvar modificações</string>
+    <string name="seus_pedidos">Seus pedidos</string>
+    <string name="pacote_de">Pacote de</string>
+    <string name="instituicao">Instituição:</string>
+    <string name="validade">Validade:</string>
+    <string name="quantidade_pedido">Quantidade:</string>
+    <string name="instituicoes_favoritas">Instituições favoritas</string>
+    <string name="distancia">Distância:</string>
+    <string name="remover_favorito">Remover dos favoritos</string>
+    <string name="confirmar_remocao">Tem certeza que deseja remover esta instituição dos seus favoritos?</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="ok">OK</string>
 </resources>

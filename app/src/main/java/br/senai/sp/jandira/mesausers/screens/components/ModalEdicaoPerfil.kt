@@ -101,29 +101,6 @@ fun ModalEdicaoPerfil(
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    // Campo CPF
-                    OutlinedTextField(
-                        value = cpf,
-                        onValueChange = { cpf = it },
-                        label = {
-                            Text(
-                                text = stringResource(R.string.cpf),
-                                fontFamily = poppinsFamily,
-                                color = primaryLight.copy(alpha = 0.7f)
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = primaryLight.copy(alpha = 0.5f),
-                            focusedBorderColor = primaryLight,
-                            focusedTextColor = primaryLight,
-                            unfocusedTextColor = primaryLight
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
                     // Campo Telefone
                     OutlinedTextField(
                         value = telefone,

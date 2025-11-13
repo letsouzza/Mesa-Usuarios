@@ -15,7 +15,9 @@ import br.senai.sp.jandira.mesausers.screens.CadastroUser
 import br.senai.sp.jandira.mesausers.screens.CodigoSenha
 import br.senai.sp.jandira.mesausers.screens.DetalhesScreen
 import br.senai.sp.jandira.mesausers.screens.EscolhaCadastro
+import br.senai.sp.jandira.mesausers.screens.FavoritosScreen
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
+import br.senai.sp.jandira.mesausers.screens.PedidosScreen
 import br.senai.sp.jandira.mesausers.screens.PerfilScreen
 import br.senai.sp.jandira.mesausers.screens.SplashScreen
 
@@ -40,6 +42,8 @@ class MainActivity : ComponentActivity() {
                 composable(route = "home"){ HomeScreen(navegacao) }
                 composable(route = "detalhes"){ DetalhesScreen(navegacao) }
                 composable(route = "perfil"){ PerfilScreen(navegacao) }
+                composable(route = "pedidos"){ PedidosScreen(navegacao) }
+                composable(route = "favoritos"){ FavoritosScreen(navegacao) }
             }
         }
     }
