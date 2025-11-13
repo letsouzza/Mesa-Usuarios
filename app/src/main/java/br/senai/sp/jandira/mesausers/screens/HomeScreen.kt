@@ -95,6 +95,9 @@ fun HomeScreen(navegacao: NavHostController?) {
     var categoriaSelecionada = remember {
         mutableStateOf(0) // 0 = All
     }
+    var empresaSelecionada = remember {
+        mutableStateOf(0) // 0 = None
+    }
     var isLoading = remember {
         mutableStateOf(true)
     }
@@ -106,6 +109,7 @@ fun HomeScreen(navegacao: NavHostController?) {
     fun carregarAlimentos(categoriaId: Int = 0) {
         isLoading.value = true
         errorMessage.value = null
+        empresaSelecionada.value = 0 // Reset empresa
         
         if (categoriaId == 0) {
             // Carregar todos os alimentos
@@ -127,8 +131,14 @@ fun HomeScreen(navegacao: NavHostController?) {
                     } else {
                         alimentoList.value = emptyList()
                         alimentoListFiltro.value = emptyList()
-                        errorMessage.value = "Falha no carregamento"
-                        Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                        // Se for 404, não é erro - apenas não há alimentos
+                        if (response.code() == 404) {
+                            errorMessage.value = null
+                            Log.d("HomeScreen", "Nenhum alimento encontrado (404)")
+                        } else {
+                            errorMessage.value = "Falha no carregamento"
+                            Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                        }
                     }
                 }
 
@@ -160,8 +170,14 @@ fun HomeScreen(navegacao: NavHostController?) {
                     } else {
                         alimentoListFiltro.value = emptyList()
                         alimentoList.value = emptyList()
-                        errorMessage.value = "Falha no carregamento"
-                        Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                        // Se for 404, não é erro - apenas não há alimentos nesta categoria
+                        if (response.code() == 404) {
+                            errorMessage.value = null
+                            Log.d("HomeScreen", "Nenhum alimento encontrado na categoria (404)")
+                        } else {
+                            errorMessage.value = "Falha no carregamento"
+                            Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                        }
                     }
                 }
 
@@ -174,6 +190,52 @@ fun HomeScreen(navegacao: NavHostController?) {
                 }
             })
         }
+    }
+
+    // Função para carregar alimentos por empresa
+    fun carregarAlimentosPorEmpresa(empresaId: Int) {
+        isLoading.value = true
+        errorMessage.value = null
+        
+        val call = RetrofitFactory().getAlimentoService().filtroEmpresa(empresaId)
+        
+        call.enqueue(object : Callback<ListAlimentoFiltro> {
+            override fun onResponse(call: Call<ListAlimentoFiltro>, response: Response<ListAlimentoFiltro>) {
+                isLoading.value = false
+                if (response.isSuccessful) {
+                    response.body()?.let { listAlimentoFiltro ->
+                        alimentoListFiltro.value = listAlimentoFiltro.resultFiltro ?: emptyList()
+                        alimentoList.value = emptyList() // Limpar lista geral
+                        empresaSelecionada.value = empresaId
+                            categoriaSelecionada.value = 0 // Reset categoria
+                        Log.d("HomeScreen", "Alimentos da empresa carregados: ${listAlimentoFiltro.resultFiltro?.size ?: 0}")
+                    } ?: run {
+                        alimentoListFiltro.value = emptyList()
+                        alimentoList.value = emptyList()
+                        Log.w("HomeScreen", "Response body é nulo")
+                    }
+                } else {
+                    alimentoListFiltro.value = emptyList()
+                    alimentoList.value = emptyList()
+                    // Se for 404, não é erro - apenas não há alimentos desta empresa
+                    if (response.code() == 404) {
+                        errorMessage.value = null
+                        Log.d("HomeScreen", "Nenhum alimento encontrado na empresa (404)")
+                    } else {
+                        errorMessage.value = "Falha no carregamento"
+                        Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ListAlimentoFiltro>, t: Throwable) {
+                isLoading.value = false
+                alimentoListFiltro.value = emptyList()
+                alimentoList.value = emptyList()
+                errorMessage.value = "Falha na conexão"
+                Log.e("HomeScreen", "Erro na requisição", t)
+            }
+        })
     }
 
     // Carregar dados da API quando a tela for criada
@@ -242,7 +304,13 @@ fun HomeScreen(navegacao: NavHostController?) {
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    DropdownFiltros()
+                    DropdownFiltros(
+                        onEmpresaSelecionada = { empresaId ->
+                            empresaSelecionada.value = empresaId
+                            categoriaSelecionada.value = 0 // Reset categoria
+                            carregarAlimentosPorEmpresa(empresaId)
+                        }
+                    )
                 }
                 
                 // Seção de Categorias
@@ -267,10 +335,11 @@ fun HomeScreen(navegacao: NavHostController?) {
                             Button(
                                 onClick = {
                                     categoriaSelecionada.value = 0
+                                    empresaSelecionada.value = 0 // Reset empresa
                                     carregarAlimentos(0)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (categoriaSelecionada.value == 0) primaryLight else Color.Gray,
+                                    containerColor = if (categoriaSelecionada.value == 0 && empresaSelecionada.value == 0) primaryLight else Color.Gray,
                                     contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(20.dp)
@@ -287,10 +356,11 @@ fun HomeScreen(navegacao: NavHostController?) {
                             Button(
                                 onClick = {
                                     categoriaSelecionada.value = categoria.id
+                                    empresaSelecionada.value = 0 // Reset empresa
                                     carregarAlimentos(categoria.id)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (categoriaSelecionada.value == categoria.id) primaryLight else Color.Gray,
+                                    containerColor = if (categoriaSelecionada.value == categoria.id && empresaSelecionada.value == 0) primaryLight else Color.Gray,
                                     contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(20.dp)
@@ -354,7 +424,7 @@ fun HomeScreen(navegacao: NavHostController?) {
                                 }
                             }
                         }
-                        (alimentoList.value.isEmpty() && alimentoListFiltro.value.isEmpty()) -> {
+                        (alimentoList.value.isEmpty() && alimentoListFiltro.value.isEmpty() && errorMessage.value == null) -> {
                             // Mensagem quando não há alimentos na categoria
                             Box(
                                 modifier = Modifier
@@ -373,10 +443,12 @@ fun HomeScreen(navegacao: NavHostController?) {
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Text(
-                                        text = if (categoriaSelecionada.value == 0) 
-                                            "Nenhum alimento disponível" 
-                                        else 
-                                            "Não há alimentos desta categoria",
+                                        text = when {
+                                            categoriaSelecionada.value == 0 && empresaSelecionada.value == 0 -> "Nenhum alimento disponível"
+                                            categoriaSelecionada.value != 0 -> "Não há alimentos desta categoria"
+                                            empresaSelecionada.value != 0 -> "Não há alimentos desta empresa"
+                                            else -> "Nenhum alimento encontrado"
+                                        },
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = poppinsFamily,
@@ -384,7 +456,11 @@ fun HomeScreen(navegacao: NavHostController?) {
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Tente selecionar outra categoria",
+                                        text = when {
+                                            categoriaSelecionada.value != 0 -> "Tente selecionar outra categoria"
+                                            empresaSelecionada.value != 0 -> "Tente selecionar outra empresa"
+                                            else -> "Tente selecionar uma categoria ou empresa"
+                                        },
                                         fontSize = 14.sp,
                                         fontFamily = poppinsFamily,
                                         color = Color.Gray.copy(alpha = 0.8f)
@@ -399,7 +475,7 @@ fun HomeScreen(navegacao: NavHostController?) {
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 // Mostrar alimentos gerais ou filtrados
-                                if (categoriaSelecionada.value == 0) {
+                                if (categoriaSelecionada.value == 0 && empresaSelecionada.value == 0) {
                                     // Mostrar todos os alimentos
                                     items(alimentoList.value) { alimento ->
                                         CardAlimento(
@@ -412,7 +488,7 @@ fun HomeScreen(navegacao: NavHostController?) {
                                         )
                                     }
                                 } else {
-                                    // Mostrar alimentos filtrados por categoria
+                                    // Mostrar alimentos filtrados (por categoria ou empresa)
                                     items(alimentoListFiltro.value) { alimento ->
                                         CardAlimento(
                                             img = alimento.imagem ?: "",
@@ -449,7 +525,10 @@ fun HomeScreen(navegacao: NavHostController?) {
                         items(empresaList.value) { empresa ->
                             CardInstituicao(
                                 nome = empresa.nome,
-                                imagem = empresa.foto
+                                imagem = empresa.foto,
+                                onClick = {
+                                    navegacao?.navigate("instituicao/${empresa.id}")
+                                }
                             )
                         }
                     }

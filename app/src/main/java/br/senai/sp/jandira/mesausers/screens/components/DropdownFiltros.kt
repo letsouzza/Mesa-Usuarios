@@ -88,7 +88,8 @@ fun formatarDataComCursor(currentValue: TextFieldValue, newInput: String): TextF
 
 @Composable
 fun DropdownFiltros(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEmpresaSelecionada: ((Int) -> Unit)? = null
 ) {
     val showDropdown = remember { mutableStateOf(false) }
     val empresaList = remember { mutableStateOf(listOf<Empresa>()) }
@@ -202,6 +203,7 @@ fun DropdownFiltros(
                     },
                     onClick = {
                         empresaSelecionada.value = empresa
+                        onEmpresaSelecionada?.invoke(empresa.id)
                         showDropdown.value = false
                     }
                 )
@@ -282,6 +284,7 @@ fun DropdownFiltros(
                                 color = Color.Black
                             )
                         }
+
                     }
                 },
                 onClick = { }

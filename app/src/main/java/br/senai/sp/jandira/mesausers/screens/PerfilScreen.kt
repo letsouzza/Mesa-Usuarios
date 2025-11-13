@@ -33,10 +33,18 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.model.UserCadastro
+import br.senai.sp.jandira.mesausers.model.OngsCadastro
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.screens.components.BarraDeTitulo
 import br.senai.sp.jandira.mesausers.screens.components.ModalEdicaoPerfil
+import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.*
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import android.util.Log
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,18 +52,18 @@ import br.senai.sp.jandira.mesausers.ui.theme.*
 fun PerfilScreen(
     controleNavegacao: NavHostController?
 ) {
-    // Dados falsos do usuário (posteriormente virão da API)
-    var perfilUsuario by remember {
-        mutableStateOf(
-            UserCadastro(
-                nome = "Mario James",
-                email = "mario@gmail.com",
-                cpf = "009.009.009-09",
-                telefone = "(11) 94444-8888",
-                foto = ""
-            )
-        )
-    }
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    
+    // Estados para dados do usuário
+    var perfilUsuario by remember { mutableStateOf<UserCadastro?>(null) }
+    var perfilOng by remember { mutableStateOf<OngsCadastro?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Dados do usuário logado
+    val userId = sharedPreferences.getInt("user_id", 0)
+    val userTipo = sharedPreferences.getString("user_tipo", "") ?: ""
     
     // Estado para controlar a exibição do modal
     var mostrarModalEdicao by remember { mutableStateOf(false) }
@@ -63,13 +71,143 @@ fun PerfilScreen(
     // Estado para controlar se há modificações pendentes
     var temModificacoesPendentes by remember { mutableStateOf(false) }
     
+    // Função para buscar dados da API (fallback)
+    fun buscarDadosAPI() {
+        when (userTipo.lowercase()) {
+            "pessoa" -> {
+                RetrofitFactory().getUserService().usuarioPorId(userId).enqueue(object : Callback<UserCadastro> {
+                    override fun onResponse(call: Call<UserCadastro>, response: Response<UserCadastro>) {
+                        isLoading = false
+                        if (response.isSuccessful) {
+                            response.body()?.let { usuario ->
+                                perfilUsuario = usuario
+                                Log.d("PerfilScreen", "Dados do usuário carregados da API: ${usuario.nome}")
+                            } ?: run {
+                                errorMessage = "Dados do usuário não encontrados"
+                            }
+                        } else {
+                            errorMessage = "Erro ao carregar dados do usuário"
+                            Log.e("PerfilScreen", "Erro na resposta: ${response.code()}")
+                        }
+                    }
+                    
+                    override fun onFailure(call: Call<UserCadastro>, t: Throwable) {
+                        isLoading = false
+                        errorMessage = "Falha na conexão"
+                        Log.e("PerfilScreen", "Erro na requisição", t)
+                    }
+                })
+            }
+            "ong" -> {
+                RetrofitFactory().getUserService().ongPorId(userId).enqueue(object : Callback<UserCadastro> {
+                    override fun onResponse(call: Call<UserCadastro>, response: Response<UserCadastro>) {
+                        isLoading = false
+                        if (response.isSuccessful) {
+                            response.body()?.let { ongData ->
+                                perfilOng = OngsCadastro(
+                                    id = ongData.id,
+                                    nome = ongData.nome,
+                                    email = ongData.email,
+                                    telefone = ongData.telefone,
+                                    foto = ongData.foto
+                                )
+                                Log.d("PerfilScreen", "Dados da ONG carregados da API: ${ongData.nome}")
+                            } ?: run {
+                                errorMessage = "Dados da ONG não encontrados"
+                            }
+                        } else {
+                            errorMessage = "Erro ao carregar dados da ONG"
+                            Log.e("PerfilScreen", "Erro na resposta: ${response.code()}")
+                        }
+                    }
+                    
+                    override fun onFailure(call: Call<UserCadastro>, t: Throwable) {
+                        isLoading = false
+                        errorMessage = "Falha na conexão"
+                        Log.e("PerfilScreen", "Erro na requisição", t)
+                    }
+                })
+            }
+            else -> {
+                errorMessage = "Tipo de usuário inválido"
+                isLoading = false
+            }
+        }
+    }
+    
+    // Função para carregar dados do usuário
+    fun carregarDadosUsuario() {
+        if (userId == 0 || userTipo.isEmpty()) {
+            errorMessage = "Usuário não logado"
+            isLoading = false
+            return
+        }
+        
+        isLoading = true
+        errorMessage = null
+        
+        Log.d("PerfilScreen", "Carregando dados do usuário - ID: $userId, Tipo: $userTipo")
+        
+        // Primeiro, tentar carregar dados do SharedPreferences
+        val dataComplete = sharedPreferences.getBoolean("user_data_complete", false)
+        
+        if (dataComplete) {
+            // Carregar dados do SharedPreferences
+            Log.d("PerfilScreen", "Carregando dados do SharedPreferences")
+            
+            when (userTipo.lowercase()) {
+                "pessoa" -> {
+                    perfilUsuario = UserCadastro(
+                        id = sharedPreferences.getInt("user_id", 0),
+                        nome = sharedPreferences.getString("user_nome", "") ?: "",
+                        email = sharedPreferences.getString("user_email", "") ?: "",
+                        cpf = sharedPreferences.getString("user_cpf", "") ?: "",
+                        telefone = sharedPreferences.getString("user_telefone", "") ?: "",
+                        foto = sharedPreferences.getString("user_foto", "") ?: ""
+                    )
+                    Log.d("PerfilScreen", "Dados do usuário carregados do SharedPreferences: ${perfilUsuario?.nome}")
+                }
+                "ong" -> {
+                    perfilOng = OngsCadastro(
+                        id = sharedPreferences.getInt("user_id", 0),
+                        nome = sharedPreferences.getString("user_nome", "") ?: "",
+                        email = sharedPreferences.getString("user_email", "") ?: "",
+                        telefone = sharedPreferences.getString("user_telefone", "") ?: "",
+                        foto = sharedPreferences.getString("user_foto", "") ?: ""
+                    )
+                    Log.d("PerfilScreen", "Dados da ONG carregados do SharedPreferences: ${perfilOng?.nome}")
+                }
+            }
+            isLoading = false
+        } else {
+            // Fallback: buscar dados da API
+            Log.d("PerfilScreen", "Dados não encontrados no SharedPreferences, buscando da API")
+            buscarDadosAPI()
+        }
+    }
+    
+    // Função para limpar dados do usuário (logout)
+    fun limparDadosUsuario() {
+        val editor = sharedPreferences.edit()
+        editor.clear()
+        editor.apply()
+        Log.d("PerfilScreen", "Dados do usuário limpos do SharedPreferences")
+    }
+    
+    // Carregar dados quando a tela for criada
+    LaunchedEffect(userId, userTipo) {
+        carregarDadosUsuario()
+    }
+    
     // Launcher para abrir a galeria
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            perfilUsuario = perfilUsuario.copy(foto = it.toString())
-            temModificacoesPendentes = true
+            perfilUsuario?.let { perfil ->
+                perfilUsuario = perfil.copy(foto = it.toString())
+                temModificacoesPendentes = true
+            }
         }
     }
 
@@ -87,8 +225,50 @@ fun PerfilScreen(
                 .padding(paddingValues)
                 .background(backgroundLight)
         ) {
-            // Botão Salvar Modificações (quando há modificações pendentes)
-            if (temModificacoesPendentes) {
+            // Estados de loading e erro
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = primaryLight)
+                    }
+                }
+                errorMessage != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "⚠️",
+                                fontSize = 48.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = errorMessage ?: "Erro desconhecido",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = poppinsFamily,
+                                color = primaryLight,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { carregarDadosUsuario() },
+                                colors = ButtonDefaults.buttonColors(containerColor = primaryLight)
+                            ) {
+                                Text("Tentar novamente", color = Color.White)
+                            }
+                        }
+                    }
+                }
+                perfilUsuario != null || perfilOng != null -> {
+                    // Botão Salvar Modificações (quando há modificações pendentes)
+                    if (temModificacoesPendentes) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -97,7 +277,18 @@ fun PerfilScreen(
                 ) {
                     Button(
                         onClick = {
-                            // Aqui você pode implementar a lógica para salvar na API
+                            // Salvar modificações no SharedPreferences
+                            perfilUsuario?.let { usuario ->
+                                val editor = sharedPreferences.edit()
+                                editor.putString("user_nome", usuario.nome)
+                                editor.putString("user_email", usuario.email)
+                                editor.putString("user_cpf", usuario.cpf)
+                                editor.putString("user_telefone", usuario.telefone)
+                                editor.putString("user_foto", usuario.foto)
+                                editor.apply()
+                                
+                                Log.d("PerfilScreen", "Dados atualizados no SharedPreferences")
+                            }
                             temModificacoesPendentes = false
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -152,9 +343,10 @@ fun PerfilScreen(
                             .background(primaryLight.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (perfilUsuario.foto.isNotEmpty()) {
+                        val fotoUrl = perfilUsuario?.foto ?: perfilOng?.foto ?: ""
+                        if (fotoUrl.isNotEmpty()) {
                             AsyncImage(
-                                model = perfilUsuario.foto,
+                                model = fotoUrl,
                                 contentDescription = "Foto do perfil",
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -198,7 +390,7 @@ fun PerfilScreen(
                         color = Color(0xFF000000)
                     )
                     Text(
-                        text = perfilUsuario.nome,
+                        text = perfilUsuario?.nome ?: perfilOng?.nome ?: "Nome não disponível",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = poppinsFamily,
@@ -250,7 +442,7 @@ fun PerfilScreen(
                     
                     // Nome Completo
                     Text(
-                        text = perfilUsuario.nome,
+                        text = perfilUsuario?.nome ?: perfilOng?.nome ?: "Nome não disponível",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,
@@ -259,25 +451,36 @@ fun PerfilScreen(
                     
                     // Email
                     Text(
-                        text = stringResource(R.string.email) + perfilUsuario.email,
+                        text = "Email: " + (perfilUsuario?.email ?: perfilOng?.email ?: "Não informado"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,
                         color = primaryLight
                     )
                     
-                    // CPF
+                    // CPF (apenas para usuário pessoa)
+                    perfilUsuario?.let { usuario ->
+                        Text(
+                            text = "CPF: " + (usuario.cpf.ifEmpty { "Não informado" }),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = poppinsFamily,
+                            color = primaryLight
+                        )
+                    }
+
+                    // Telefone
                     Text(
-                        text = stringResource(R.string.cpf) + perfilUsuario.cpf,
+                        text = "Telefone: " + (perfilUsuario?.telefone ?: perfilOng?.telefone ?: "Não informado"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,
                         color = primaryLight
                     )
-
-                    // Telefone
+                    
+                    // Tipo de usuário
                     Text(
-                        text = stringResource(R.string.telefone) + perfilUsuario.telefone,
+                        text = "Tipo: " + if (perfilUsuario != null) "Pessoa Física" else "ONG",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,
@@ -359,19 +562,23 @@ fun PerfilScreen(
                     }
                 }
             }
-            } // Fechamento da Column interna (conteúdo com scroll)
+                    } // Fechamento da Column interna (conteúdo com scroll)
+                }
+            }
         }
         
-        // Modal de edição de perfil
-        ModalEdicaoPerfil(
-            perfilUsuario = perfilUsuario,
-            mostrarModal = mostrarModalEdicao,
-            onDismiss = { mostrarModalEdicao = false },
-            onAtualizar = { perfilAtualizado ->
-                perfilUsuario = perfilAtualizado
-                temModificacoesPendentes = true
-            }
-        )
+        // Modal de edição de perfil (apenas se houver dados carregados)
+        if (perfilUsuario != null) {
+            ModalEdicaoPerfil(
+                perfilUsuario = perfilUsuario!!,
+                mostrarModal = mostrarModalEdicao,
+                onDismiss = { mostrarModalEdicao = false },
+                onAtualizar = { perfilAtualizado ->
+                    perfilUsuario = perfilAtualizado
+                    temModificacoesPendentes = true
+                }
+            )
+        }
     }
 }
 

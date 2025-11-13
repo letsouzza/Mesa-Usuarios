@@ -9,5 +9,6 @@ data class Empresa(
     var senha: String = "",
     @SerializedName("cnpj_mei") var cnpjMei: String = "",
     var telefone: String = "",
-    var foto: String = ""
+    var foto: String = "",
+    var endereco: String = ""
 )

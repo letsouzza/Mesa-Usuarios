@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.service
 
+import br.senai.sp.jandira.mesausers.model.Empresa
 import br.senai.sp.jandira.mesausers.model.ListEmpresa
 import br.senai.sp.jandira.mesausers.model.LoginUsuarios
 import br.senai.sp.jandira.mesausers.model.OngsCadastro
@@ -10,6 +11,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface UserService {
 
@@ -27,4 +29,11 @@ interface UserService {
 
     @GET("empresa")
     fun listEmpresa(): retrofit2.Call<ListEmpresa>
+
+    @GET("usuario/{id}")
+    fun usuarioPorId(@Path("id") id: Int): retrofit2.Call<UserCadastro>
+
+    @GET("ong/{id}")
+    fun ongPorId(@Path("id") id: Int): retrofit2.Call<UserCadastro>
+
 }

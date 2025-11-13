@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import br.senai.sp.jandira.mesausers.screens.HomeScreen
 import br.senai.sp.jandira.mesausers.screens.RecuperacaoSenha
 import br.senai.sp.jandira.mesausers.screens.AtualizacaoSenha
@@ -16,6 +18,7 @@ import br.senai.sp.jandira.mesausers.screens.CodigoSenha
 import br.senai.sp.jandira.mesausers.screens.DetalhesScreen
 import br.senai.sp.jandira.mesausers.screens.EscolhaCadastro
 import br.senai.sp.jandira.mesausers.screens.FavoritosScreen
+import br.senai.sp.jandira.mesausers.screens.InstituicaoScreen
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
 import br.senai.sp.jandira.mesausers.screens.PedidosScreen
 import br.senai.sp.jandira.mesausers.screens.PerfilScreen
@@ -29,7 +32,7 @@ class MainActivity : ComponentActivity() {
             val navegacao = rememberNavController()
             NavHost(
                 navController = navegacao,
-                startDestination = "home"
+                startDestination = "detalhes"
             ){
                 composable(route = "login"){ LoginScreen(navegacao) }
                 composable(route = "cadastroUser"){ CadastroUser(navegacao) }
@@ -44,6 +47,13 @@ class MainActivity : ComponentActivity() {
                 composable(route = "perfil"){ PerfilScreen(navegacao) }
                 composable(route = "pedidos"){ PedidosScreen(navegacao) }
                 composable(route = "favoritos"){ FavoritosScreen(navegacao) }
+                composable(
+                    route = "instituicao/{empresaId}",
+                    arguments = listOf(navArgument("empresaId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val empresaId = backStackEntry.arguments?.getInt("empresaId") ?: 0
+                    InstituicaoScreen(navegacao, empresaId)
+                }
             }
         }
     }

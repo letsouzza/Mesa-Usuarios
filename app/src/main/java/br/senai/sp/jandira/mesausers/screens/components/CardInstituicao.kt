@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.screens.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,14 +25,17 @@ import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 fun CardInstituicao(
     imagem: String = "",
     nome: String = "Atacadão",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(horizontal = 8.dp)
     ) {
         Card(
-            modifier = Modifier.size(60.dp),
+            modifier = Modifier
+                .size(60.dp)
+                .clickable { onClick?.invoke() },
             shape = CircleShape,
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {

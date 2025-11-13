@@ -55,6 +55,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import retrofit2.await
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import android.util.Log
 
 @Composable
 fun LoginScreen(navegacao: NavHostController?) {
@@ -65,8 +68,11 @@ fun LoginScreen(navegacao: NavHostController?) {
     var senhaVisivel by remember { mutableStateOf(false) }
 
     val userApi = RetrofitFactory().getUserService()
+    val context = LocalContext.current
 
     var mostrarMensagemSucesso by remember { mutableStateOf(false) }
+    var mensagemErro by remember { mutableStateOf("") }
+    var mostrarErro by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -220,16 +226,60 @@ fun LoginScreen(navegacao: NavHostController?) {
                     Spacer(Modifier.padding(5.dp))
                     Button(
                         onClick = {
-                            val body = LoginUsuarios(
-                                email = emailState,
-                                senha = senhaState,
-                                tipo = tipoLogin
-                            )
+                            if (emailState.isNotEmpty() && senhaState.isNotEmpty() && tipoLogin.isNotEmpty()) {
+                                val body = LoginUsuarios(
+                                    email = emailState,
+                                    senha = senhaState,
+                                    tipo = tipoLogin
+                                )
 
-                            GlobalScope.launch(Dispatchers.IO){
-                                val login = userApi.login(body).await()
-                                mostrarMensagemSucesso = true
-                                println("deu CERTOOOOOOOO")
+                                GlobalScope.launch(Dispatchers.IO){
+                                    try {
+                                        val response = userApi.login(body).await()
+                                        
+                                        if (response.status) {
+                                            // Salvar todos os dados do usuário no SharedPreferences
+                                            val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                                            val editor = sharedPreferences.edit()
+                                            
+                                            // Dados básicos
+                                            editor.putInt("user_id", response.usuario.id)
+                                            editor.putString("user_tipo", tipoLogin)
+                                            editor.putString("user_nome", response.usuario.nome)
+                                            editor.putString("user_email", response.usuario.email)
+                                            
+                                            // Dados adicionais
+                                            editor.putString("user_cpf", response.usuario.cpf)
+                                            editor.putString("user_cnpj_mei", response.usuario.cnpjMei)
+                                            editor.putString("user_telefone", response.usuario.telefone)
+                                            editor.putString("user_foto", response.usuario.foto)
+                                            
+                                            // Marcar que os dados estão completos
+                                            editor.putBoolean("user_data_complete", true)
+                                            editor.apply()
+                                            
+                                            Log.d("LoginScreen", "Login realizado com sucesso:")
+                                            Log.d("LoginScreen", "- ID: ${response.usuario.id}")
+                                            Log.d("LoginScreen", "- Nome: ${response.usuario.nome}")
+                                            Log.d("LoginScreen", "- Email: ${response.usuario.email}")
+                                            Log.d("LoginScreen", "- Tipo: $tipoLogin")
+                                            Log.d("LoginScreen", "- CPF: ${response.usuario.cpf}")
+                                            Log.d("LoginScreen", "- Telefone: ${response.usuario.telefone}")
+                                            
+                                            mostrarMensagemSucesso = true
+                                        } else {
+                                            mensagemErro = response.message
+                                            mostrarErro = true
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("LoginScreen", "Erro no login", e)
+                                        mensagemErro = "Erro de conexão. Tente novamente."
+                                        mostrarErro = true
+                                    }
+                                }
+                            } else {
+                                mensagemErro = "Preencha todos os campos"
+                                mostrarErro = true
                             }
                         },
                         modifier = Modifier
@@ -284,6 +334,47 @@ fun LoginScreen(navegacao: NavHostController?) {
                             fontSize = 18.sp,
                             fontFamily = poppinsFamily,
                             fontWeight =  FontWeight.SemiBold,
+                            color = Color(0xFF1B4227)
+                        )
+                    }
+                }
+            )
+        }
+        
+        // Dialog de erro
+        if (mostrarErro) {
+            AlertDialog(
+                onDismissRequest = {
+                    mostrarErro = false
+                },
+                title = {
+                    Text(
+                        text = "Erro",
+                        fontSize = 25.sp,
+                        fontFamily = poppinsFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1B4227)
+                    )
+                },
+                text = {
+                    Text(
+                        text = mensagemErro,
+                        fontSize = 15.sp,
+                        fontFamily = poppinsFamily,
+                        color = Color(0x99000000)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            mostrarErro = false
+                        }
+                    ) {
+                        Text(
+                            text = "Ok",
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFamily,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF1B4227)
                         )
                     }

@@ -13,6 +13,10 @@ interface AlimentosService {
     @GET("filtroCat/{id}")
     fun filtroCategoria(@Path("id") id: Int): retrofit2.Call<ListAlimentoFiltro>
 
+    @GET("empresaAlimento/{id}")
+    fun filtroEmpresa(@Path("id") id: Int): retrofit2.Call<ListAlimentoFiltro>
+
     @GET("alimentos")
     fun listAlimento(): retrofit2.Call<ListAlimento>
+
 }
