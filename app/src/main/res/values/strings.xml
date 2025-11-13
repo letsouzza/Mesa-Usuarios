@@ -48,4 +48,12 @@
     <string name="data_validade">Data de Validade:</string>
     <string name="adicionar_carrinho">Adicionar ao carrinho</string>
     <string name="km">km</string>
+    <string name="perfil">Perfil</string>
+    <string name="ola">Olá</string>
+    <string name="dados_conta">Dados da conta</string>
+    <string name="nome_completo">Nome Completo</string>
+    <string name="favoritos">Favoritos</string>
+    <string name="atualizar_senha">Atualizar Senha</string>
+    <string name="editar">Editar</string>
+    <string name="salvar_modificacoes">Salvar modificações</string>
 </resources>
