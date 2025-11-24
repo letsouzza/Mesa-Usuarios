@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
                 composable(route = "home"){ HomeScreen(navegacao, sharedViewModel) }
                 composable(route = "detalhes"){ DetalhesScreen(navegacao) }
                 composable(route = "perfil"){ PerfilScreen(navegacao) }
-                composable(route = "pedidos"){ PedidosScreen(navegacao) }
+                composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
                 composable(route = "favoritos"){ FavoritosScreen(navegacao) }
                 composable(
                     route = "instituicao/{empresaId}",

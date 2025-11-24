@@ -1,154 +1,146 @@
 package br.senai.sp.jandira.mesausers.screens.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 import coil.compose.AsyncImage
-import br.senai.sp.jandira.mesausers.R
-import br.senai.sp.jandira.mesausers.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-// Estrutura de dados para pedidos
-data class Pedido(
-    val id: String,
-    val nomeProduto: String,
-    val instituicao: String,
-    val validade: String,
-    val quantidade: Int,
-    val distancia: String,
-    val imagemProduto: String
-)
+// Função para formatar a data de yyyy-MM-dd para dd/MM/yyyy
+fun formatarDataValidade(dataString: String?): String {
+    if (dataString == null) return "Não informada"
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dataString)
+        date?.let { outputFormat.format(it) } ?: dataString
+    } catch (e: Exception) {
+        dataString // Retorna a string original se houver erro
+    }
+}
 
 @Composable
 fun CardPedido(
-    pedido: Pedido,
-    onDeleteClick: (String) -> Unit = {}
+    alimento: String,
+    imagem: String?,
+    quantidade: String,
+    empresa: String,
+    validade: String?,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = primaryLight),
+            .height(140.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF4B734F))
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Bottom
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Imagem do produto
-            AsyncImage(
-                model = pedido.imagemProduto,
-                contentDescription = pedido.nomeProduto,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            // Informações do produto
-            Column(
-                modifier = Modifier.weight(1f)
+            Card(
+                modifier = Modifier.size(100.dp, 120.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                // Nome do produto
-                Text(
-                    text = "${stringResource(R.string.pacote_de)} ${pedido.nomeProduto}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = poppinsFamily,
-                    color = Color.White
+                AsyncImage(
+                    model = imagem,
+                    contentDescription = "Imagem do $alimento",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Instituição
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(120.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = "${stringResource(R.string.instituicao)} ${pedido.instituicao}",
-                    fontSize = 12.sp,
+                    text = alimento,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     fontFamily = poppinsFamily,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = Color(0xFFFFF9EB)
                 )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Validade
                 Text(
-                    text = "${stringResource(R.string.validade)} ${pedido.validade}",
-                    fontSize = 12.sp,
+                    text = "Instituição: $empresa",
+                    fontSize = 14.sp,
                     fontFamily = poppinsFamily,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = Color(0xFFFFF9EB)
                 )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Quantidade e distância
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "${stringResource(R.string.quantidade_pedido)} ${pedido.quantidade}",
-                        fontSize = 12.sp,
-                        fontFamily = poppinsFamily,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Text(
-                        text = pedido.distancia,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = poppinsFamily,
-                        color = Color.White
+                Text(
+                    text = "Validade: ${formatarDataValidade(validade)}",
+                    fontSize = 14.sp,
+                    fontFamily = poppinsFamily,
+                    color = Color(0xFFFFF9EB)
+                )
+                Text(
+                    text = "Quantidade: $quantidade",
+                    fontSize = 14.sp,
+                    fontFamily = poppinsFamily,
+                    color = Color(0xFFFFF9EB)
+                )
+            }
+            Column(
+                modifier = Modifier.height(120.dp),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Excluir Pedido",
+                        tint = Color(0xFFFFF9EB),
+                        modifier = Modifier.size(28.dp)
                     )
                 }
-            }
-            
-            // Ícone de lixeira
-            IconButton(
-                onClick = { onDeleteClick(pedido.id) }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Remover pedido",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFFFFF9EB)
 @Composable
 private fun CardPedidoPreview() {
-    MesaTheme {
-        CardPedido(
-            pedido = Pedido(
-                id = "1",
-                nomeProduto = "Macarrão",
-                instituicao = "Assai Barueri",
-                validade = "13/10/2025",
-                quantidade = 5,
-                distancia = "5KM",
-                imagemProduto = "https://via.placeholder.com/60x60/8B4513/FFFFFF?text=Macarrão"
-            )
-        )
-    }
+//    CardPedido(
+//        nomeAlimento = "Pacote de Macarrão",
+//        imagemAlimento = "",
+//        quantidade = "5",
+//        nomeEmpresa = "Assai Barueri",
+//        validade = "2025-10-13T00:00:00.000Z",
+//        onDelete = {}
+//    )
 }
