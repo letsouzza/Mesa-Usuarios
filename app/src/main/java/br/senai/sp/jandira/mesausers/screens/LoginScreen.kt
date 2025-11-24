@@ -45,9 +45,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.model.LoginUsuarios
+import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import br.senai.sp.jandira.mesausers.screens.components.LoginDropdown
 import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
@@ -55,12 +57,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import retrofit2.await
-import androidx.compose.ui.platform.LocalContext
-import android.content.Context
 import android.util.Log
 
 @Composable
-fun LoginScreen(navegacao: NavHostController?) {
+fun LoginScreen(navegacao: NavHostController?, sharedViewModel: SharedViewModel) {
 
     var emailState by remember {mutableStateOf("")}
     var senhaState by remember {mutableStateOf("")}
@@ -68,7 +68,6 @@ fun LoginScreen(navegacao: NavHostController?) {
     var senhaVisivel by remember { mutableStateOf(false) }
 
     val userApi = RetrofitFactory().getUserService()
-    val context = LocalContext.current
 
     var mostrarMensagemSucesso by remember { mutableStateOf(false) }
     var mensagemErro by remember { mutableStateOf("") }
@@ -236,36 +235,23 @@ fun LoginScreen(navegacao: NavHostController?) {
                                 GlobalScope.launch(Dispatchers.IO){
                                     try {
                                         val response = userApi.login(body).await()
-                                        
+
                                         if (response.status) {
-                                            // Salvar todos os dados do usuário no SharedPreferences
-                                            val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-                                            val editor = sharedPreferences.edit()
-                                            
-                                            // Dados básicos
-                                            editor.putInt("user_id", response.usuario.id)
-                                            editor.putString("user_tipo", tipoLogin)
-                                            editor.putString("user_nome", response.usuario.nome)
-                                            editor.putString("user_email", response.usuario.email)
-                                            
-                                            // Dados adicionais
-                                            editor.putString("user_cpf", response.usuario.cpf)
-                                            editor.putString("user_cnpj_mei", response.usuario.cnpjMei)
-                                            editor.putString("user_telefone", response.usuario.telefone)
-                                            editor.putString("user_foto", response.usuario.foto)
-                                            
-                                            // Marcar que os dados estão completos
-                                            editor.putBoolean("user_data_complete", true)
-                                            editor.apply()
-                                            
-                                            Log.d("LoginScreen", "Login realizado com sucesso:")
-                                            Log.d("LoginScreen", "- ID: ${response.usuario.id}")
-                                            Log.d("LoginScreen", "- Nome: ${response.usuario.nome}")
-                                            Log.d("LoginScreen", "- Email: ${response.usuario.email}")
-                                            Log.d("LoginScreen", "- Tipo: $tipoLogin")
-                                            Log.d("LoginScreen", "- CPF: ${response.usuario.cpf}")
-                                            Log.d("LoginScreen", "- Telefone: ${response.usuario.telefone}")
-                                            
+                                            // Preencher o SharedViewModel com os dados do usuário
+                                            if (tipoLogin.equals("ong", ignoreCase = true)) {
+                                                sharedViewModel.id_ong = response.usuario.id
+                                                sharedViewModel.id_usuario = 0
+                                            } else {
+                                                sharedViewModel.id_usuario = response.usuario.id
+                                                sharedViewModel.id_ong = 0
+                                            }
+                                            sharedViewModel.tipo_usuario = tipoLogin
+
+                                            Log.d("LoginScreen", "Login bem-sucedido e ViewModel atualizado.")
+                                            Log.d("LoginScreen", "- ID Usuario: ${sharedViewModel.id_usuario}")
+                                            Log.d("LoginScreen", "- ID ONG: ${sharedViewModel.id_ong}")
+                                            Log.d("LoginScreen", "- Tipo: ${sharedViewModel.tipo_usuario}")
+
                                             mostrarMensagemSucesso = true
                                         } else {
                                             mensagemErro = response.message
@@ -340,7 +326,7 @@ fun LoginScreen(navegacao: NavHostController?) {
                 }
             )
         }
-        
+
         // Dialog de erro
         if (mostrarErro) {
             AlertDialog(
@@ -387,5 +373,5 @@ fun LoginScreen(navegacao: NavHostController?) {
 @Preview
 @Composable
 private fun LoginScreenPreview() {
-    LoginScreen(null)
+    LoginScreen(null, viewModel())
 }

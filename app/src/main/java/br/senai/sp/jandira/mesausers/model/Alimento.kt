@@ -8,8 +8,11 @@ data class Alimento(
     var quantidade: String = "",
     @SerializedName("data_de_validade") var prazo: String = "",
     var descricao: String = "",
-    var peso: String = "",
+    var peso: Double = 0.0,
+    @SerializedName("id_tipo_peso") var idTipoPeso: Int = 1,
     var imagem: String = "",
     @SerializedName("id_empresa") var idEmpresa: Int = 1,
-    val categorias: List<Categoria> // ou List<Int> dependendo do tipo
+    val categorias: List<Categoria>, // ou List<Int> dependendo do tipo
+    val empresa: Empresa? = null,
+    val tipoPeso: List<TipoPeso>? = null
 )

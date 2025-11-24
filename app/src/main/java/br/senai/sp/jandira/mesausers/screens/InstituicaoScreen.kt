@@ -26,11 +26,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +42,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import br.senai.sp.jandira.mesausers.model.AlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.Empresa
 import br.senai.sp.jandira.mesausers.model.ListAlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.ListEmpresa
+import br.senai.sp.jandira.mesausers.model.Pedido
+import br.senai.sp.jandira.mesausers.model.PedidoResponse
+import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import br.senai.sp.jandira.mesausers.screens.components.BarraDeTitulo
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.screens.components.CardAlimento
@@ -52,66 +58,87 @@ import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.backgroundLight
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 import br.senai.sp.jandira.mesausers.ui.theme.primaryLight
+import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-// Função para formatar data de forma segura
-fun formatarDataSegura(dataOriginal: String?): String {
-    if (dataOriginal.isNullOrEmpty() || dataOriginal.isBlank()) {
-        return "Data não informada"
-    }
-    
-    // Se a data está no formato yyyy-MM-dd, converte para dd/MM/yyyy
+fun formatarDataSegura(dataString: String?): String {
+    if (dataString == null) return ""
     return try {
-        if (dataOriginal.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
-            val partes = dataOriginal.split("-")
-            if (partes.size == 3) {
-                "${partes[2]}/${partes[1]}/${partes[0]}"
-            } else {
-                dataOriginal
-            }
-        } else {
-            dataOriginal
-        }
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dataString)
+        date?.let { outputFormat.format(it) } ?: dataString
     } catch (e: Exception) {
-        dataOriginal
+        dataString // Retorna a string original se houver erro
     }
 }
 
 @Composable
-fun InstituicaoScreen(
-    navegacao: NavHostController?,
-    empresaId: Int
-) {
-    // Estados para controlar a UI
+fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewModel: SharedViewModel) {
+
+    // Estados da UI
     var empresa = remember { mutableStateOf<Empresa?>(null) }
-    var alimentosList = remember { mutableStateOf(listOf<AlimentoFiltro>()) }
+    var alimentosList = remember { mutableStateOf<List<AlimentoFiltro>>(emptyList()) }
     var isLoading = remember { mutableStateOf(true) }
     var errorMessage = remember { mutableStateOf<String?>(null) }
-    var isFavorited = remember { mutableStateOf(false) }
+    var isFavorited = remember { mutableStateOf(false) } // Estado para favoritar
 
-    // Função para carregar dados da empresa usando a lista de empresas
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Função para criar o pedido
+    fun criarPedido(idAlimento: Int) {
+        val pedido = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) {
+            Pedido(id_ong = sharedViewModel.id_ong, id_alimento = idAlimento, quantidade = 1)
+        } else {
+            Pedido(id_usuario = sharedViewModel.id_usuario, id_alimento = idAlimento, quantidade = 1)
+        }
+
+        val call = RetrofitFactory().getPedidoService().criarPedido(pedido)
+
+        call.enqueue(object : Callback<PedidoResponse> {
+            override fun onResponse(call: Call<PedidoResponse>, response: Response<PedidoResponse>) {
+                val pedidoResponse = response.body()
+                if (response.isSuccessful && pedidoResponse != null && pedidoResponse.status) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Pedido acrescentado com sucesso!")
+                    }
+                } else {
+                    scope.launch {
+                        val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
+                        Log.e("InstituicaoScreen", "Erro ao criar pedido: ${response.code()} - $errorBody")
+                        snackbarHostState.showSnackbar("Erro ao criar pedido: ${pedidoResponse?.message ?: response.message()}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<PedidoResponse>, t: Throwable) {
+                scope.launch {
+                    Log.e("InstituicaoScreen", "Falha na conexão ao criar pedido", t)
+                    snackbarHostState.showSnackbar("Falha na conexão. Tente novamente mais tarde.")
+                }
+            }
+        })
+    }
+
+    // Função para carregar detalhes da empresa
     fun carregarEmpresa() {
         isLoading.value = true
-        errorMessage.value = null
-        
-        Log.d("InstituicaoScreen", "Iniciando carregamento da empresa com ID: $empresaId")
-        
-        // Buscar na lista de empresas
-        RetrofitFactory().getUserService().listEmpresa().enqueue(object : Callback<ListEmpresa> {
+        val call = RetrofitFactory().getUserService().listEmpresa()
+
+        call.enqueue(object : Callback<ListEmpresa> {
             override fun onResponse(call: Call<ListEmpresa>, response: Response<ListEmpresa>) {
                 isLoading.value = false
-                
                 if (response.isSuccessful) {
                     response.body()?.let { listEmpresa ->
-                        
-                        // Buscar a empresa específica pelo ID
                         val empresaEncontrada = listEmpresa.empresas.find { it.id == empresaId }
-                        
                         if (empresaEncontrada != null) {
-                            // Verificar se a empresa tem dados válidos
-                            if (empresaEncontrada.id != 0 && empresaEncontrada.nome.isNotBlank()) {
+                            if (empresaEncontrada.nome != null && empresaEncontrada.nome.isNotBlank()) {
                                 empresa.value = empresaEncontrada
                             } else {
                                 errorMessage.value = "Empresa encontrada mas sem dados cadastrados"
@@ -143,7 +170,7 @@ fun InstituicaoScreen(
     // Função para carregar alimentos da empresa
     fun carregarAlimentosEmpresa() {
         val call = RetrofitFactory().getAlimentoService().filtroEmpresa(empresaId)
-        
+
         call.enqueue(object : Callback<ListAlimentoFiltro> {
             override fun onResponse(call: Call<ListAlimentoFiltro>, response: Response<ListAlimentoFiltro>) {
                 if (response.isSuccessful) {
@@ -184,6 +211,7 @@ fun InstituicaoScreen(
         bottomBar = {
             BarraInferior(navegacao)
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -353,12 +381,14 @@ fun InstituicaoScreen(
                             if (alimentosList.value.isNotEmpty()) {
                                 items(alimentosList.value) { alimento ->
                                     CardAlimento(
+                                        id = alimento.id ?: 0,
                                         img = alimento.imagem ?: "",
                                         nome = alimento.nome ?: "Alimento sem nome",
                                         prazo = formatarDataSegura(alimento.prazo),
                                         quantidade = alimento.quantidade ?: "0",
                                         imgEmpresa = alimento.fotoEmpresa ?: "",
-                                        empresa = alimento.nomeEmpresa ?: "Empresa não informada"
+                                        empresa = alimento.nomeEmpresa ?: "Empresa não informada",
+                                        onClick = { idAlimento -> criarPedido(idAlimento) }
                                     )
                                 }
                             } else {

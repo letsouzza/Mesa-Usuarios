@@ -4,7 +4,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class RetrofitFactory {
-    private val BASE_URL = "http://10.107.144.13:8080/v1/mesa-plus/"
+    private val BASE_URL = "https://mesaplus-bbh2hhheaab7f6ep.canadacentral-01.azurewebsites.net/v1/mesa-plus/"
 
     private val RETROFIT_FACTORY = Retrofit
         .Builder()
@@ -25,6 +25,11 @@ class RetrofitFactory {
     fun getAlimentoService() : AlimentosService{
         return RETROFIT_FACTORY
             .create(AlimentosService::class.java)
+    }
+
+    fun getPedidoService() : PedidoService{
+        return RETROFIT_FACTORY
+            .create(PedidoService::class.java)
     }
 
 }

@@ -37,12 +37,14 @@ import coil.compose.AsyncImage
 
 @Composable
 fun CardAlimento(
+    id: Int = 0,
     img: String = "https://mesaplustcc.blob.core.windows.net/fotos/106aab1d-a736-429f-9b8a-af40d61562d3.jpg",
     nome: String = "Feijão",
     prazo: String = "25/09/25",
     quantidade: String = "5",
     imgEmpresa: String = "",
     empresa: String = "Atacadão",
+    onClick: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -143,7 +145,7 @@ fun CardAlimento(
 
             // Ícone do carrinho
             IconButton(
-                onClick = {}
+                onClick = { onClick(id) }
             ){
                 Icon(
                     imageVector = Icons.Default.AddShoppingCart,
@@ -159,5 +161,5 @@ fun CardAlimento(
 @Preview
 @Composable
 private fun CardAlimentoPreview() {
-    CardAlimento()
+    CardAlimento(onClick = {})
 }

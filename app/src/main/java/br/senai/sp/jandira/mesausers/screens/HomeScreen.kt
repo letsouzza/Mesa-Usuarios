@@ -21,11 +21,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -46,6 +50,9 @@ import br.senai.sp.jandira.mesausers.model.ListAlimento
 import br.senai.sp.jandira.mesausers.model.ListAlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.ListCategoria
 import br.senai.sp.jandira.mesausers.model.ListEmpresa
+import br.senai.sp.jandira.mesausers.model.Pedido
+import br.senai.sp.jandira.mesausers.model.PedidoResponse
+import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import br.senai.sp.jandira.mesausers.screens.components.BarraDeTitulo
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.screens.components.CardAlimento
@@ -56,9 +63,11 @@ import br.senai.sp.jandira.mesausers.ui.theme.MesaTheme
 import br.senai.sp.jandira.mesausers.ui.theme.backgroundLight
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 import br.senai.sp.jandira.mesausers.ui.theme.primaryLight
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
 
 // Função para formatar a data de yyyy-MM-dd para dd/MM/yy
 fun formatarData(dataOriginal: String?): String {
@@ -77,7 +86,7 @@ fun formatarData(dataOriginal: String?): String {
 }
 
 @Composable
-fun HomeScreen(navegacao: NavHostController?) {
+fun HomeScreen(navegacao: NavHostController?, sharedViewModel: SharedViewModel) {
 
     // Estados para controlar a UI
     var alimentoList = remember {
@@ -96,7 +105,10 @@ fun HomeScreen(navegacao: NavHostController?) {
         mutableStateOf(0) // 0 = All
     }
     var empresaSelecionada = remember {
-        mutableStateOf(0) // 0 = None
+        mutableStateOf(0) // 0 = Nenhuma empresa selecionada
+    }
+    var dataSelecionada = remember {
+        mutableStateOf("") // String vazia = Nenhuma data selecionada
     }
     var isLoading = remember {
         mutableStateOf(true)
@@ -105,16 +117,52 @@ fun HomeScreen(navegacao: NavHostController?) {
         mutableStateOf<String?>(null)
     }
 
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    fun criarPedido(idAlimento: Int) {
+        val pedido = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) {
+            Pedido(id_ong = sharedViewModel.id_ong, id_alimento = idAlimento, quantidade = 1)
+        } else {
+            Pedido(id_usuario = sharedViewModel.id_usuario, id_alimento = idAlimento, quantidade = 1)
+        }
+
+        val call = RetrofitFactory().getPedidoService().criarPedido(pedido)
+
+        call.enqueue(object : Callback<PedidoResponse> {
+            override fun onResponse(call: Call<PedidoResponse>, response: Response<PedidoResponse>) {
+                val pedidoResponse = response.body()
+                if (response.isSuccessful && pedidoResponse != null && pedidoResponse.status) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Pedido acrescentado com sucesso!")
+                    }
+                } else {
+                    scope.launch {
+                        val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
+                        Log.e("HomeScreen", "Erro ao criar pedido: ${response.code()} - $errorBody")
+                        snackbarHostState.showSnackbar("Erro ao criar pedido: ${pedidoResponse?.message ?: response.message()}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<PedidoResponse>, t: Throwable) {
+                scope.launch {
+                    Log.e("HomeScreen", "Falha na conexão ao criar pedido", t)
+                    snackbarHostState.showSnackbar("Falha na conexão. Tente novamente mais tarde.")
+                }
+            }
+        })
+    }
+
     // Função para carregar alimentos (todos ou por categoria)
     fun carregarAlimentos(categoriaId: Int = 0) {
         isLoading.value = true
         errorMessage.value = null
-        empresaSelecionada.value = 0 // Reset empresa
-        
+
         if (categoriaId == 0) {
             // Carregar todos os alimentos
             val call = RetrofitFactory().getAlimentoService().listAlimento()
-            
+
             call.enqueue(object : Callback<ListAlimento> {
                 override fun onResponse(call: Call<ListAlimento>, response: Response<ListAlimento>) {
                     isLoading.value = false
@@ -129,12 +177,12 @@ fun HomeScreen(navegacao: NavHostController?) {
                             Log.w("HomeScreen", "Response body é nulo")
                         }
                     } else {
+                        // Tratar 404 como lista vazia (sem erro)
                         alimentoList.value = emptyList()
                         alimentoListFiltro.value = emptyList()
-                        // Se for 404, não é erro - apenas não há alimentos
                         if (response.code() == 404) {
                             errorMessage.value = null
-                            Log.d("HomeScreen", "Nenhum alimento encontrado (404)")
+                            Log.i("HomeScreen", "Nenhum alimento disponível (404)")
                         } else {
                             errorMessage.value = "Falha no carregamento"
                             Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
@@ -153,7 +201,7 @@ fun HomeScreen(navegacao: NavHostController?) {
         } else {
             // Carregar alimentos por categoria
             val call = RetrofitFactory().getAlimentoService().filtroCategoria(categoriaId)
-            
+
             call.enqueue(object : Callback<ListAlimentoFiltro> {
                 override fun onResponse(call: Call<ListAlimentoFiltro>, response: Response<ListAlimentoFiltro>) {
                     isLoading.value = false
@@ -170,10 +218,10 @@ fun HomeScreen(navegacao: NavHostController?) {
                     } else {
                         alimentoListFiltro.value = emptyList()
                         alimentoList.value = emptyList()
-                        // Se for 404, não é erro - apenas não há alimentos nesta categoria
+                        // Tratar 404 como "nenhum alimento disponível"
                         if (response.code() == 404) {
                             errorMessage.value = null
-                            Log.d("HomeScreen", "Nenhum alimento encontrado na categoria (404)")
+                            Log.i("HomeScreen", "Nenhum alimento encontrado para a categoria (404)")
                         } else {
                             errorMessage.value = "Falha no carregamento"
                             Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
@@ -196,9 +244,9 @@ fun HomeScreen(navegacao: NavHostController?) {
     fun carregarAlimentosPorEmpresa(empresaId: Int) {
         isLoading.value = true
         errorMessage.value = null
-        
+
         val call = RetrofitFactory().getAlimentoService().filtroEmpresa(empresaId)
-        
+
         call.enqueue(object : Callback<ListAlimentoFiltro> {
             override fun onResponse(call: Call<ListAlimentoFiltro>, response: Response<ListAlimentoFiltro>) {
                 isLoading.value = false
@@ -206,8 +254,6 @@ fun HomeScreen(navegacao: NavHostController?) {
                     response.body()?.let { listAlimentoFiltro ->
                         alimentoListFiltro.value = listAlimentoFiltro.resultFiltro ?: emptyList()
                         alimentoList.value = emptyList() // Limpar lista geral
-                        empresaSelecionada.value = empresaId
-                            categoriaSelecionada.value = 0 // Reset categoria
                         Log.d("HomeScreen", "Alimentos da empresa carregados: ${listAlimentoFiltro.resultFiltro?.size ?: 0}")
                     } ?: run {
                         alimentoListFiltro.value = emptyList()
@@ -217,10 +263,10 @@ fun HomeScreen(navegacao: NavHostController?) {
                 } else {
                     alimentoListFiltro.value = emptyList()
                     alimentoList.value = emptyList()
-                    // Se for 404, não é erro - apenas não há alimentos desta empresa
+                    // Tratar 404 como "nenhum alimento disponível"
                     if (response.code() == 404) {
                         errorMessage.value = null
-                        Log.d("HomeScreen", "Nenhum alimento encontrado na empresa (404)")
+                        Log.i("HomeScreen", "Nenhum alimento encontrado para a empresa (404)")
                     } else {
                         errorMessage.value = "Falha no carregamento"
                         Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
@@ -234,6 +280,67 @@ fun HomeScreen(navegacao: NavHostController?) {
                 alimentoList.value = emptyList()
                 errorMessage.value = "Falha na conexão"
                 Log.e("HomeScreen", "Erro na requisição", t)
+            }
+        })
+    }
+
+    // Função para carregar alimentos por data
+    fun carregarAlimentosPorData(data: String) {
+        isLoading.value = true
+        errorMessage.value = null
+
+        Log.d("HomeScreen", "Iniciando filtro por data: '$data'")
+        val call = RetrofitFactory().getAlimentoService().filtroData(data)
+
+        call.enqueue(object : Callback<ListAlimentoFiltro> {
+            override fun onResponse(call: Call<ListAlimentoFiltro>, response: Response<ListAlimentoFiltro>) {
+                isLoading.value = false
+                Log.d("HomeScreen", "Resposta da API filtroData - Código: ${response.code()}")
+                Log.d("HomeScreen", "Headers da resposta: ${response.headers()}")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { listAlimentoFiltro ->
+                        Log.d("HomeScreen", "Response body recebido: $listAlimentoFiltro")
+                        Log.d("HomeScreen", "ResultFiltro: ${listAlimentoFiltro.resultFiltro}")
+                        alimentoListFiltro.value = listAlimentoFiltro.resultFiltro ?: emptyList()
+                        alimentoList.value = emptyList() // Limpar lista geral
+                        Log.d("HomeScreen", "Alimentos por data carregados: ${listAlimentoFiltro.resultFiltro?.size ?: 0}")
+
+                        // Log detalhado de cada alimento encontrado
+                        listAlimentoFiltro.resultFiltro?.forEachIndexed { index, alimento ->
+                            Log.d("HomeScreen", "Alimento $index: nome=${alimento.nome}, prazo=${alimento.prazo}")
+                        }
+                    } ?: run {
+                        alimentoListFiltro.value = emptyList()
+                        alimentoList.value = emptyList()
+                        Log.w("HomeScreen", "Response body é nulo")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("HomeScreen", "Erro na resposta da API filtroData:")
+                    Log.e("HomeScreen", "Código: ${response.code()}")
+                    Log.e("HomeScreen", "Mensagem: ${response.message()}")
+                    Log.e("HomeScreen", "Error body: $errorBody")
+
+                    alimentoListFiltro.value = emptyList()
+                    alimentoList.value = emptyList()
+                    // Tratar 404 como "nenhum alimento disponível"
+                    if (response.code() == 404) {
+                        errorMessage.value = null
+                        Log.i("HomeScreen", "Nenhum alimento encontrado para a data (404)")
+                    } else {
+                        errorMessage.value = "Falha no carregamento"
+                        Log.e("HomeScreen", "Erro na resposta: ${response.code()}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ListAlimentoFiltro>, t: Throwable) {
+                isLoading.value = false
+                alimentoListFiltro.value = emptyList()
+                alimentoList.value = emptyList()
+                errorMessage.value = "Falha na conexão"
+                Log.e("HomeScreen", "Erro na requisição por data", t)
             }
         })
     }
@@ -290,6 +397,7 @@ fun HomeScreen(navegacao: NavHostController?) {
         bottomBar = {
             BarraInferior(navegacao)
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -308,11 +416,18 @@ fun HomeScreen(navegacao: NavHostController?) {
                         onEmpresaSelecionada = { empresaId ->
                             empresaSelecionada.value = empresaId
                             categoriaSelecionada.value = 0 // Reset categoria
+                            dataSelecionada.value = "" // Reset data
                             carregarAlimentosPorEmpresa(empresaId)
+                        },
+                        onDataSelecionada = { data ->
+                            dataSelecionada.value = data
+                            categoriaSelecionada.value = 0 // Reset categoria
+                            empresaSelecionada.value = 0 // Reset empresa
+                            carregarAlimentosPorData(data)
                         }
                     )
                 }
-                
+
                 // Seção de Categorias
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -336,10 +451,11 @@ fun HomeScreen(navegacao: NavHostController?) {
                                 onClick = {
                                     categoriaSelecionada.value = 0
                                     empresaSelecionada.value = 0 // Reset empresa
+                                    dataSelecionada.value = "" // Reset data
                                     carregarAlimentos(0)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (categoriaSelecionada.value == 0 && empresaSelecionada.value == 0) primaryLight else Color.Gray,
+                                    containerColor = if (categoriaSelecionada.value == 0) primaryLight else Color.Gray,
                                     contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(20.dp)
@@ -357,10 +473,11 @@ fun HomeScreen(navegacao: NavHostController?) {
                                 onClick = {
                                     categoriaSelecionada.value = categoria.id
                                     empresaSelecionada.value = 0 // Reset empresa
+                                    dataSelecionada.value = "" // Reset data
                                     carregarAlimentos(categoria.id)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (categoriaSelecionada.value == categoria.id && empresaSelecionada.value == 0) primaryLight else Color.Gray,
+                                    containerColor = if (categoriaSelecionada.value == categoria.id) primaryLight else Color.Gray,
                                     contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(20.dp)
@@ -475,28 +592,35 @@ fun HomeScreen(navegacao: NavHostController?) {
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 // Mostrar alimentos gerais ou filtrados
-                                if (categoriaSelecionada.value == 0 && empresaSelecionada.value == 0) {
-                                    // Mostrar todos os alimentos
+                                if (categoriaSelecionada.value == 0 && empresaSelecionada.value == 0 && dataSelecionada.value.isEmpty()) {
+                                    // Mostrar todos os alimentos (sem filtros)
+                                    Log.d("HomeScreen", "Renderizando todos os alimentos: ${alimentoList.value.size}")
                                     items(alimentoList.value) { alimento ->
                                         CardAlimento(
+                                            id = alimento.id ?: 0,
                                             img = alimento.imagem ?: "",
                                             nome = alimento.nome ?: "Alimento sem nome",
                                             prazo = formatarData(alimento.prazo),
                                             quantidade = alimento.quantidade ?: "0",
-                                            imgEmpresa = "",
-                                            empresa = "Empresa ID: ${alimento.idEmpresa}"
+                                            imgEmpresa = alimento.empresa?.foto ?: "",
+                                            empresa = alimento.empresa?.nome ?: "Empresa não informada",
+                                            onClick = { idAlimento -> criarPedido(idAlimento) }
                                         )
                                     }
                                 } else {
-                                    // Mostrar alimentos filtrados (por categoria ou empresa)
+                                    // Mostrar alimentos filtrados (por categoria, empresa ou data)
+                                    Log.d("HomeScreen", "Renderizando alimentos filtrados: ${alimentoListFiltro.value.size}")
+                                    Log.d("HomeScreen", "Filtros ativos - Categoria: ${categoriaSelecionada.value}, Empresa: ${empresaSelecionada.value}, Data: '${dataSelecionada.value}'")
                                     items(alimentoListFiltro.value) { alimento ->
                                         CardAlimento(
+                                            id = alimento.id ?: 0,
                                             img = alimento.imagem ?: "",
                                             nome = alimento.nome ?: "Alimento sem nome",
                                             prazo = formatarData(alimento.prazo),
                                             quantidade = alimento.quantidade ?: "0",
                                             imgEmpresa = alimento.fotoEmpresa ?: "",
-                                            empresa = alimento.nomeEmpresa ?: "Empresa não informada"
+                                            empresa = alimento.nomeEmpresa ?: "Empresa não informada",
+                                            onClick = { idAlimento -> criarPedido(idAlimento) }
                                         )
                                     }
                                 }
@@ -542,6 +666,6 @@ fun HomeScreen(navegacao: NavHostController?) {
 @Composable
 private fun HomeScreenPreview() {
     MesaTheme {
-        HomeScreen(null)
+        HomeScreen(null, viewModel())
     }
 }
