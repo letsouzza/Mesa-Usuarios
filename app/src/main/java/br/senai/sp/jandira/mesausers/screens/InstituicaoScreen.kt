@@ -50,6 +50,7 @@ import br.senai.sp.jandira.mesausers.model.Favorito
 import br.senai.sp.jandira.mesausers.model.FavoritoResponse
 import br.senai.sp.jandira.mesausers.model.ListAlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.ListEmpresa
+import br.senai.sp.jandira.mesausers.model.ListFavoritosResponse
 import br.senai.sp.jandira.mesausers.model.Pedido
 import br.senai.sp.jandira.mesausers.model.PedidoResponse
 import br.senai.sp.jandira.mesausers.model.SharedViewModel
@@ -128,6 +129,34 @@ fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewM
         })
     }
 
+    fun carregarFavoritos() {
+        val call = RetrofitFactory().getFavoritoService().getFavoritos(
+            mapOf(
+                if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) {
+                    "id_ong" to sharedViewModel.id_ong.toString()
+                } else {
+                    "id_usuario" to sharedViewModel.id_usuario.toString()
+                }
+            )
+        )
+
+        call.enqueue(object : Callback<ListFavoritosResponse> {
+            override fun onResponse(call: Call<ListFavoritosResponse>, response: Response<ListFavoritosResponse>) {
+                if (response.isSuccessful) {
+                    response.body()?.let { responseBody ->
+                        if (responseBody.status) {
+                            sharedViewModel.updateFavoritos(responseBody.favoritos)
+                        }
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ListFavoritosResponse>, t: Throwable) {
+                Log.e("InstituicaoScreen", "Falha ao carregar favoritos", t)
+            }
+        })
+    }
+
     fun criarFavorito(empresaId: Int) {
         val favorito = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) {
             Favorito(id_ong = sharedViewModel.id_ong, id_empresa = empresaId)
@@ -143,6 +172,8 @@ fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewM
                 if (response.isSuccessful && favoritoResponse != null && favoritoResponse.status) {
                     scope.launch {
                         snackbarHostState.showSnackbar("Empresa adicionada aos favoritos!")
+                        // Atualiza a lista de favoritos após adicionar um novo
+                        carregarFavoritos()
                     }
                 } else {
                     scope.launch {
