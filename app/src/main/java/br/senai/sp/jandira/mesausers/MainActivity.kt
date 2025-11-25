@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 }
                 composable(route = "perfil"){ PerfilScreen(navegacao) }
                 composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
-                composable(route = "favoritos"){ FavoritosScreen(navegacao) }
+                composable(route = "favoritos"){ FavoritosScreen(navegacao, sharedViewModel) }
                 composable(
                     route = "instituicao/{empresaId}",
                     arguments = listOf(navArgument("empresaId") { type = NavType.IntType })

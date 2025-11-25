@@ -21,19 +21,13 @@ import coil.compose.AsyncImage
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.ui.theme.*
 
-// Estrutura de dados para instituições favoritas
-data class InstituicaoFavorita(
-    val id: String,
-    val nome: String,
-    val distancia: String,
-    val logoUrl: String,
-    val isFavorito: Boolean = true
-)
-
 @Composable
 fun CardInstituicaoFavorita(
-    instituicao: InstituicaoFavorita,
-    onFavoritoClick: (String) -> Unit = {},
+    id: Int,
+    nome: String,
+    telefone: String,
+    logoUrl: String?,
+    isFavorito: Boolean = true,
     onRemoverFavorito: (String) -> Unit = {}
 ) {
     var mostrarModalConfirmacao by remember { mutableStateOf(false) }
@@ -54,114 +48,59 @@ fun CardInstituicaoFavorita(
         ) {
             // Logo da instituição
             AsyncImage(
-                model = instituicao.logoUrl,
-                contentDescription = instituicao.nome,
+                model = logoUrl,
+                contentDescription = nome,
                 modifier = Modifier
                     .size(60.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             // Informações da instituição
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 // Nome da instituição
                 Text(
-                    text = instituicao.nome,
+                    text = nome,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = poppinsFamily,
                     color = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // Distância
                 Text(
-                    text = "${stringResource(R.string.distancia)} ${instituicao.distancia}",
+                    text = "${stringResource(R.string.telefone)} ${telefone}",
                     fontSize = 14.sp,
                     fontFamily = poppinsFamily,
                     color = Color.Gray
                 )
             }
-            
+
             // Ícone de coração
             IconButton(
                 onClick = {
-                    if (instituicao.isFavorito) {
-                        // Se está favoritado, mostra modal de confirmação
-                        mostrarModalConfirmacao = true
-                    } else {
-                        // Se não está favoritado, adiciona aos favoritos
-                        onFavoritoClick(instituicao.id)
-                    }
+                    onRemoverFavorito(id.toString())
                 }
             ) {
                 Icon(
-                    imageVector = if (instituicao.isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = if (instituicao.isFavorito) "Remover dos favoritos" else "Adicionar aos favoritos",
-                    tint = if (instituicao.isFavorito) Color.Red else primaryLight,
+                    imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorito) "Remover dos favoritos" else "Adicionar aos favoritos",
+                    tint = if (isFavorito) Color.Red else primaryLight,
                     modifier = Modifier.size(28.dp)
                 )
             }
         }
-        
+
         // Divisor
         HorizontalDivider(
             color = Color.Gray.copy(alpha = 0.3f),
             thickness = 1.dp
-        )
-    }
-    
-    // Modal de confirmação para remoção
-    if (mostrarModalConfirmacao) {
-        AlertDialog(
-            onDismissRequest = { mostrarModalConfirmacao = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.remover_favorito),
-                    fontFamily = poppinsFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = primaryLight
-                )
-            },
-            text = {
-                Text(
-                    text = "Tem certeza que deseja remover \"${instituicao.nome}\" dos seus favoritos?",
-                    fontFamily = poppinsFamily,
-                    color = Color.Black
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        mostrarModalConfirmacao = false
-                        onRemoverFavorito(instituicao.id)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.ok),
-                        fontFamily = poppinsFamily,
-                        color = primaryLight
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { mostrarModalConfirmacao = false }
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancelar),
-                        fontFamily = poppinsFamily,
-                        color = Color.Gray
-                    )
-                }
-            },
-            containerColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
         )
     }
 }
@@ -170,14 +109,14 @@ fun CardInstituicaoFavorita(
 @Composable
 private fun CardInstituicaoFavoritaPreview() {
     MesaTheme {
-        CardInstituicaoFavorita(
-            instituicao = InstituicaoFavorita(
-                id = "1",
-                nome = "Assaí",
-                distancia = "5KM",
-                logoUrl = "https://via.placeholder.com/60x60/FF6B00/FFFFFF?text=Assaí",
-                isFavorito = true
-            )
-        )
+//        CardInstituicaoFavorita(
+//            instituicao = InstituicaoFavorita(
+//                id = "1",
+//                nome = "Assaí",
+//                distancia = "5KM",
+//                logoUrl = "https://via.placeholder.com/60x60/FF6B00/FFFFFF?text=Assaí",
+//                isFavorito = true
+//            )
+//        )
     }
 }

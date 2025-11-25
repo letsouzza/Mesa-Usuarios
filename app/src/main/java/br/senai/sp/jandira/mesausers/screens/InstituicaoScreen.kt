@@ -46,6 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.model.AlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.Empresa
+import br.senai.sp.jandira.mesausers.model.Favorito
+import br.senai.sp.jandira.mesausers.model.FavoritoResponse
 import br.senai.sp.jandira.mesausers.model.ListAlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.ListEmpresa
 import br.senai.sp.jandira.mesausers.model.Pedido
@@ -120,6 +122,40 @@ fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewM
             override fun onFailure(call: Call<PedidoResponse>, t: Throwable) {
                 scope.launch {
                     Log.e("InstituicaoScreen", "Falha na conexão ao criar pedido", t)
+                    snackbarHostState.showSnackbar("Falha na conexão. Tente novamente mais tarde.")
+                }
+            }
+        })
+    }
+
+    fun criarFavorito(empresaId: Int) {
+        val favorito = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) {
+            Favorito(id_ong = sharedViewModel.id_ong, id_empresa = empresaId)
+        } else {
+            Favorito(id_usuario = sharedViewModel.id_usuario, id_empresa = empresaId)
+        }
+
+        val call = RetrofitFactory().getFavoritoService().criarFavorito(favorito)
+
+        call.enqueue(object : Callback<FavoritoResponse> {
+            override fun onResponse(call: Call<FavoritoResponse>, response: Response<FavoritoResponse>) {
+                val favoritoResponse = response.body()
+                if (response.isSuccessful && favoritoResponse != null && favoritoResponse.status) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Empresa adicionada aos favoritos!")
+                    }
+                } else {
+                    scope.launch {
+                        val errorBody = response.errorBody()?.string() ?: "Erro desconhecido"
+                        Log.e("InstituicaoScreen", "Erro ao favoritar empresa: ${response.code()} - $errorBody")
+                        snackbarHostState.showSnackbar("Erro ao favoritar empresa: ${favoritoResponse?.message ?: response.message()}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<FavoritoResponse>, t: Throwable) {
+                scope.launch {
+                    Log.e("InstituicaoScreen", "Falha na conexão ao favoritar empresa", t)
                     snackbarHostState.showSnackbar("Falha na conexão. Tente novamente mais tarde.")
                 }
             }
@@ -309,7 +345,7 @@ fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewM
                                             IconButton(
                                                 onClick = {
                                                     isFavorited.value = !isFavorited.value
-                                                    // TODO: Implementar lógica de favoritar na API
+                                                    criarFavorito(empresaId)
                                                 }
                                             ) {
                                                 Icon(

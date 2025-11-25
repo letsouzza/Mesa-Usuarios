@@ -32,4 +32,9 @@ class RetrofitFactory {
             .create(PedidoService::class.java)
     }
 
+    fun getFavoritoService() : FavoritoService{
+        return RETROFIT_FACTORY
+            .create(FavoritoService::class.java)
+    }
+
 }

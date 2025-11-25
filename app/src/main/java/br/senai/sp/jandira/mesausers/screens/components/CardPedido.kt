@@ -78,10 +78,10 @@ fun CardPedido(
             ) {
                 // Verifica se a imagem não está vazia e constrói a URL corretamente
                 if (!imagem.isNullOrEmpty()) {
-                    val imageUrl = if (!imagem.startsWith("http")) {
-                        "https://$imagem"
-                    } else {
-                        imagem
+                    val imageUrl = when {
+                        imagem.startsWith("http") -> imagem
+                        imagem.startsWith("//") -> "https:$imagem"
+                        else -> "https://$imagem"
                     }
                     
                     AsyncImage(

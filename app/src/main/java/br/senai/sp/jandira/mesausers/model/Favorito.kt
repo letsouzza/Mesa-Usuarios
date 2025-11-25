@@ -1,0 +1,9 @@
+package br.senai.sp.jandira.mesausers.model
+
+import com.google.gson.annotations.SerializedName
+
+data class Favorito(
+    @SerializedName("id_usuario") val id_usuario: Int? = null,
+    @SerializedName("id_ong") val id_ong: Int? = null,
+    val id_empresa: Int
+)

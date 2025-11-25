@@ -12,12 +12,21 @@ class SharedViewModel : ViewModel() {
     private val _pedidos = MutableLiveData<List<PedidoUsuario>?>()
     val pedidos: LiveData<List<PedidoUsuario>?> = _pedidos
     
+    fun updatePedidos(newPedidos: List<PedidoUsuario>?) {
+        _pedidos.value = newPedidos?.toList()
+    }
+
+
+    private val _favoritos = MutableLiveData<List<FavoritoUsuario>?>()
+    val favoritos: LiveData<List<FavoritoUsuario>?> = _favoritos
+
+    fun updateFavoritos(newFavoritos: List<FavoritoUsuario>?) {
+        _favoritos.value = newFavoritos?.toList()
+    }
+
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
-    
-    fun updatePedidos(newPedidos: List<PedidoUsuario>?) {
-        _pedidos.value = newPedidos
-    }
     
     fun setErrorMessage(message: String?) {
         _errorMessage.value = message

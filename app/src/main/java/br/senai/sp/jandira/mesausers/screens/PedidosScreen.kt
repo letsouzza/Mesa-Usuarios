@@ -27,6 +27,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,8 +52,6 @@ import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.backgroundLight
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 import br.senai.sp.jandira.mesausers.ui.theme.primaryLight
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -65,49 +65,50 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
     // Estado para armazenar o pedido a ser excluído
     val pedidoParaExcluir = remember { mutableStateOf<PedidoUsuario?>(null) }
 
-    val pedidosState = remember { mutableStateOf<List<PedidoUsuario>?>(null) }
+    val pedidosState by sharedViewModel.pedidos.observeAsState(initial = null)
     val isLoading = remember { mutableStateOf(true) }
-    val errorMessage = remember { mutableStateOf<String?>(null) }
+    val errorMessage by sharedViewModel.errorMessage.observeAsState(initial = null)
 
     LaunchedEffect(Unit) {
-        val idKey = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) "id_ong" else "id_usuario"
-        val idValue = if (sharedViewModel.tipo_usuario.equals("ong", ignoreCase = true)) sharedViewModel.id_ong else sharedViewModel.id_usuario
+        // Se já temos os pedidos no ViewModel, não precisa buscar novamente
+        if (sharedViewModel.pedidos.value == null || sharedViewModel.pedidos.value.isNullOrEmpty()) {
+            // Busca os pedidos do usuário
+            val call = RetrofitFactory().getPedidoService().getPedidos(
+                mapOf("id_usuario" to sharedViewModel.id_usuario.toString())
+            )
+            
+            call.enqueue(object : Callback<ListPedidosResponse> {
+                override fun onResponse(call: Call<ListPedidosResponse>, response: Response<ListPedidosResponse>) {
+                    isLoading.value = false
+                    if (response.isSuccessful) {
+                        val responseBody = response.body()
+                        if (responseBody?.status == true) {
+                            sharedViewModel.updatePedidos(responseBody.pedidos)
 
-        if (idValue == 0) {
-            errorMessage.value = "ID do usuário não encontrado. Faça login novamente."
-            isLoading.value = false
-            return@LaunchedEffect
-        }
-
-        val params = mapOf(idKey to idValue.toString())
-
-        val call = RetrofitFactory().getPedidoService().getPedidos(params)
-
-        call.enqueue(object : Callback<ListPedidosResponse> {
-            override fun onResponse(call: Call<ListPedidosResponse>, response: Response<ListPedidosResponse>) {
-                isLoading.value = false
-                if (response.isSuccessful) {
-                    val listPedidosResponse = response.body()
-                    if (listPedidosResponse != null && listPedidosResponse.status) {
-                        pedidosState.value = listPedidosResponse.pedidos
-                        if (listPedidosResponse.pedidos.isNullOrEmpty()) {
-                            errorMessage.value = "Você ainda não fez nenhum pedido."
+                            val pedidos = responseBody?.pedidos
+                            if (pedidos == null || pedidos.isEmpty()) {
+                                sharedViewModel.setErrorMessage("Você ainda não fez nenhum pedido.")
+                            } else {
+                                sharedViewModel.setErrorMessage(null)
+                            }
+                        } else {
+                            sharedViewModel.setErrorMessage(responseBody?.message ?: "Erro ao carregar pedidos")
                         }
                     } else {
-                        errorMessage.value = listPedidosResponse?.message ?: "Erro ao buscar pedidos."
+                        sharedViewModel.setErrorMessage("Erro de servidor: ${response.code()}")
+                        Log.e("PedidosScreen", "Erro na resposta: ${response.errorBody()?.string()}")
                     }
-                } else {
-                    errorMessage.value = "Erro de servidor: ${response.code()}"
-                    Log.e("PedidosScreen", "Erro na resposta: ${response.errorBody()?.string()}")
                 }
-            }
 
-            override fun onFailure(call: Call<ListPedidosResponse>, t: Throwable) {
-                isLoading.value = false
-                errorMessage.value = "Falha na conexão. Verifique sua internet."
-                Log.e("PedidosScreen", "Falha na requisição", t)
-            }
-        })
+                override fun onFailure(call: Call<ListPedidosResponse>, t: Throwable) {
+                    isLoading.value = false
+                    sharedViewModel.setErrorMessage("Falha na conexão. Verifique sua internet.")
+                    Log.e("PedidosScreen", "Falha na requisição", t)
+                }
+            })
+        } else {
+            isLoading.value = false
+        }
     }
 
     fun deletarPedido(
@@ -126,10 +127,10 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                     val responseBody = response.body()
                     if (responseBody?.status == true) {
                         // Atualiza a lista local removendo o item excluído
-                        val currentList = sharedViewModel.pedidos.value?.toMutableList()
-                        if (position in 0 until (currentList?.size ?: 0)) {
-                            currentList?.removeAt(position)
-                            sharedViewModel.updatePedidos(currentList)
+                        val currentList = sharedViewModel.pedidos.value?.toMutableList() ?: mutableListOf()
+                        if (position in currentList.indices) {
+                            currentList.removeAt(position)
+                            sharedViewModel.updatePedidos(currentList.toList())
                         }
                         
                         Toast.makeText(
@@ -180,10 +181,10 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                             CircularProgressIndicator(color = primaryLight)
                         }
                     }
-                    errorMessage.value != null -> {
+                    errorMessage != null -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = errorMessage.value!!,
+                                text = errorMessage!!,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = poppinsFamily,
@@ -193,7 +194,7 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                             )
                         }
                     }
-                    pedidosState.value != null -> {
+                    pedidosState!= null -> {
                         LazyColumn(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -208,8 +209,8 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
-                            items(pedidosState.value!!) { pedido ->
-                                val position = pedidosState.value?.indexOfFirst { it.idPedido == pedido.idPedido } ?: -1
+                            items(pedidosState!!) { pedido ->
+                                val position = pedidosState?.indexOfFirst { it.idPedido == pedido.idPedido } ?: -1
                                 if (position != -1) {
                                     CardPedido(
                                         alimento = pedido.nomeAlimento,
@@ -246,7 +247,7 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                     onClick = {
                         val pedido = pedidoParaExcluir.value
                         if (pedido != null) {
-                            val position = pedidosState.value?.indexOfFirst { it.idPedido == pedido.idPedido } ?: -1
+                            val position = pedidosState?.indexOfFirst { it.idPedido == pedido.idPedido } ?: -1
                             if (position != -1) {
                                 deletarPedido(
                                     idPedido = pedido.idPedido,
