@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.screens.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.R
 import br.senai.sp.jandira.mesausers.ui.theme.poppinsFamily
 import br.senai.sp.jandira.mesausers.ui.theme.primaryLight
@@ -44,13 +46,21 @@ fun CardAlimento(
     quantidade: String = "5",
     imgEmpresa: String = "",
     empresa: String = "Atacadão",
-    onClick: (Int) -> Unit
+    onClick: (Int) -> Unit,
+    navController: NavHostController? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .clickable {
+                if (id > 0) {
+                    navController?.navigate("alimento/$id")
+                } else {
+                    onClick?.invoke(id)
+                }
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = primaryLight)
     ) {

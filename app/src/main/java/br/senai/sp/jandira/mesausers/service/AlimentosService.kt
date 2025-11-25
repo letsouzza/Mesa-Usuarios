@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.service
 
+import br.senai.sp.jandira.mesausers.model.AlimentoResponse
 import br.senai.sp.jandira.mesausers.model.ListAlimento
 import br.senai.sp.jandira.mesausers.model.ListAlimentoFiltro
 import br.senai.sp.jandira.mesausers.model.ListCategoria
@@ -16,6 +17,9 @@ interface AlimentosService {
 
     @GET("empresaAlimento/{id}")
     fun filtroEmpresa(@Path("id") id: Int): retrofit2.Call<ListAlimentoFiltro>
+
+    @GET("alimento/{id}")
+    fun getAlimentoPorId(@Path("id") id: Int): retrofit2.Call<AlimentoResponse>
 
     @GET("filtroData")
     fun filtroData(@Query("data") data: String): retrofit2.Call<ListAlimentoFiltro>

@@ -47,7 +47,13 @@ class MainActivity : ComponentActivity() {
                 composable(route = "codigo"){ CodigoSenha(navegacao) }
                 composable(route = "atualizarSenha"){ AtualizacaoSenha(navegacao) }
                 composable(route = "home"){ HomeScreen(navegacao, sharedViewModel) }
-                composable(route = "detalhes"){ DetalhesScreen(navegacao) }
+                composable(
+                    route = "alimento/{alimentoId}",
+                    arguments = listOf(navArgument("alimentoId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val alimentoId = backStackEntry.arguments?.getInt("alimentoId") ?: 0
+                    DetalhesScreen(navegacao, alimentoId, sharedViewModel)
+                }
                 composable(route = "perfil"){ PerfilScreen(navegacao) }
                 composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
                 composable(route = "favoritos"){ FavoritosScreen(navegacao) }

@@ -604,7 +604,9 @@ fun HomeScreen(navegacao: NavHostController?, sharedViewModel: SharedViewModel) 
                                             quantidade = alimento.quantidade ?: "0",
                                             imgEmpresa = alimento.empresa?.foto ?: "",
                                             empresa = alimento.empresa?.nome ?: "Empresa não informada",
-                                            onClick = { idAlimento -> criarPedido(idAlimento) }
+                                            onClick = { idAlimento -> criarPedido(idAlimento) },
+                                            navController = navegacao
+
                                         )
                                     }
                                 } else {
@@ -620,7 +622,8 @@ fun HomeScreen(navegacao: NavHostController?, sharedViewModel: SharedViewModel) 
                                             quantidade = alimento.quantidade ?: "0",
                                             imgEmpresa = alimento.fotoEmpresa ?: "",
                                             empresa = alimento.nomeEmpresa ?: "Empresa não informada",
-                                            onClick = { idAlimento -> criarPedido(idAlimento) }
+                                            onClick = { idAlimento -> criarPedido(idAlimento) },
+                                            navController = navegacao
                                         )
                                     }
                                 }
