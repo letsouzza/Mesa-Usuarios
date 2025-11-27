@@ -32,8 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import br.senai.sp.jandira.mesausers.R
-import br.senai.sp.jandira.mesausers.model.UserCadastro
-import br.senai.sp.jandira.mesausers.model.OngsCadastro
+import br.senai.sp.jandira.mesausers.model.*
 import br.senai.sp.jandira.mesausers.screens.components.BarraInferior
 import br.senai.sp.jandira.mesausers.screens.components.BarraDeTitulo
 import br.senai.sp.jandira.mesausers.screens.components.ModalEdicaoPerfil
@@ -41,16 +40,20 @@ import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.*
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
+import br.senai.sp.jandira.mesausers.MainActivity
+import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(
-    controleNavegacao: NavHostController?
+    navegacao: NavHostController?,
+    sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -99,19 +102,19 @@ fun PerfilScreen(
                 })
             }
             "ong" -> {
-                RetrofitFactory().getUserService().ongPorId(userId).enqueue(object : Callback<UserCadastro> {
-                    override fun onResponse(call: Call<UserCadastro>, response: Response<UserCadastro>) {
+                RetrofitFactory().getUserService().ongPorId(userId).enqueue(object : Callback<OngResponse> {
+                    override fun onResponse(call: Call<OngResponse>, response: Response<OngResponse>) {
                         isLoading = false
                         if (response.isSuccessful) {
-                            response.body()?.let { ongData ->
+                            response.body()?.let { ongResponse ->
                                 perfilOng = OngsCadastro(
-                                    id = ongData.id,
-                                    nome = ongData.nome,
-                                    email = ongData.email,
-                                    telefone = ongData.telefone,
-                                    foto = ongData.foto
+                                    id = ongResponse.id,
+                                    nome = ongResponse.nome,
+                                    email = ongResponse.email,
+                                    telefone = ongResponse.telefone,
+                                    foto = ongResponse.foto
                                 )
-                                Log.d("PerfilScreen", "Dados da ONG carregados da API: ${ongData.nome}")
+                                Log.d("PerfilScreen", "Dados da ONG carregados da API: ${ongResponse.nome}")
                             } ?: run {
                                 errorMessage = "Dados da ONG não encontrados"
                             }
@@ -120,8 +123,8 @@ fun PerfilScreen(
                             Log.e("PerfilScreen", "Erro na resposta: ${response.code()}")
                         }
                     }
-                    
-                    override fun onFailure(call: Call<UserCadastro>, t: Throwable) {
+
+                    override fun onFailure(call: Call<OngResponse>, t: Throwable) {
                         isLoading = false
                         errorMessage = "Falha na conexão"
                         Log.e("PerfilScreen", "Erro na requisição", t)
@@ -194,9 +197,19 @@ fun PerfilScreen(
         Log.d("PerfilScreen", "Dados do usuário limpos do SharedPreferences")
     }
     
-    // Carregar dados quando a tela for criada
-    LaunchedEffect(userId, userTipo) {
+    // Efeito para carregar os dados do usuário quando a tela for exibida
+    LaunchedEffect(Unit) {
+        Log.d("PerfilScreen", "Iniciando carregamento do perfil...")
+        Log.d("PerfilScreen", "User ID: $userId, Tipo: $userTipo")
         carregarDadosUsuario()
+    }
+    
+    // Efeito para observar mudanças no tipo de usuário
+    LaunchedEffect(userTipo) {
+        if (userTipo.isNotEmpty()) {
+            Log.d("PerfilScreen", "Tipo de usuário alterado: $userTipo")
+            carregarDadosUsuario()
+        }
     }
     
     // Launcher para abrir a galeria
@@ -216,7 +229,7 @@ fun PerfilScreen(
             BarraDeTitulo()
         },
         bottomBar = {
-            BarraInferior(controleNavegacao)
+            BarraInferior(navegacao)
         }
     ) { paddingValues ->
         Column(
@@ -514,8 +527,8 @@ fun PerfilScreen(
                     )
                     
                     IconButton(
-                        onClick = { 
-                            controleNavegacao?.navigate("favoritos")
+                        onClick = {
+                            navegacao?.navigate("favoritos")
                         }
                     ) {
                         Icon(
@@ -551,7 +564,7 @@ fun PerfilScreen(
                     
                     IconButton(
                         onClick = { 
-                            controleNavegacao?.navigate("recuperacao")
+                            navegacao?.navigate("recuperacao")
                         }
                     ) {
                         Icon(
@@ -582,10 +595,10 @@ fun PerfilScreen(
     }
 }
 
-@Preview
-@Composable
-private fun PerfilScreenPreview() {
-    MesaTheme {
-        PerfilScreen(null)
-    }
-}
+//@Preview
+//@Composable
+//private fun PerfilScreenPreview() {
+//    MesaTheme {
+//        PerfilScreen(null)
+//    }
+//}

@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -221,6 +223,9 @@ fun FavoritosScreen(
                                     onRemoverFavorito = {
                                         favoritoParaExcluir.value = favorito
                                         showDeleteDialog.value = true
+                                    },
+                                    onClick = { empresaId ->
+                                        controleNavegacao?.navigate("instituicao/$empresaId")
                                     }
                                 )
                             }

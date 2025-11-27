@@ -1,5 +1,6 @@
 package br.senai.sp.jandira.mesausers.screens.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,14 +29,16 @@ fun CardInstituicaoFavorita(
     telefone: String,
     logoUrl: String?,
     isFavorito: Boolean = true,
-    onRemoverFavorito: (String) -> Unit = {}
+    onRemoverFavorito: (String) -> Unit = {},
+    onClick: (Int) -> Unit = {}
 ) {
     var mostrarModalConfirmacao by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onClick(id) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(0.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

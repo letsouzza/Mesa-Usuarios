@@ -29,8 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import br.senai.sp.jandira.mesausers.model.ListPedidosResponse
 import br.senai.sp.jandira.mesausers.model.PedidoUsuario
-import br.senai.sp.jandira.mesausers.model.ResponseCadastro
 import br.senai.sp.jandira.mesausers.model.ResponseGeral
 import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import br.senai.sp.jandira.mesausers.util.showToast
@@ -221,6 +218,10 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                                         onDelete = {
                                             pedidoParaExcluir.value = pedido
                                             showDeleteDialog.value = true
+                                        },
+                                        onClick = {
+                                            // Navega para a tela de detalhes do alimento
+                                            navegacao?.navigate("alimento/${pedido.idAlimento}")
                                         }
                                     )
                                 }

@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     val alimentoId = backStackEntry.arguments?.getInt("alimentoId") ?: 0
                     DetalhesScreen(navegacao, alimentoId, sharedViewModel)
                 }
-                composable(route = "perfil"){ PerfilScreen(navegacao) }
+                composable(route = "perfil"){ PerfilScreen(navegacao , sharedViewModel) }
                 composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
                 composable(route = "favoritos"){ FavoritosScreen(navegacao, sharedViewModel) }
                 composable(
