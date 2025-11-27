@@ -13,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
@@ -26,7 +25,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -38,13 +36,7 @@ import br.senai.sp.jandira.mesausers.screens.components.BarraDeTitulo
 import br.senai.sp.jandira.mesausers.screens.components.ModalEdicaoPerfil
 import br.senai.sp.jandira.mesausers.service.RetrofitFactory
 import br.senai.sp.jandira.mesausers.ui.theme.*
-import androidx.compose.ui.platform.LocalContext
-import android.content.Context
-import android.content.Intent
 import android.util.Log
-import androidx.lifecycle.viewmodel.compose.viewModel
-import br.senai.sp.jandira.mesausers.MainActivity
-import br.senai.sp.jandira.mesausers.model.SharedViewModel
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -55,18 +47,22 @@ fun PerfilScreen(
     navegacao: NavHostController?,
     sharedViewModel: SharedViewModel
 ) {
-    val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-    
     // Estados para dados do usuário
     var perfilUsuario by remember { mutableStateOf<UserCadastro?>(null) }
     var perfilOng by remember { mutableStateOf<OngsCadastro?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
-    // Dados do usuário logado
-    val userId = sharedPreferences.getInt("user_id", 0)
-    val userTipo = sharedPreferences.getString("user_tipo", "") ?: ""
+    // Dados do usuário logado do SharedViewModel
+    val userId = if (sharedViewModel.id_usuario != 0) {
+        sharedViewModel.id_usuario
+    } else if (sharedViewModel.id_ong != 0) {
+        sharedViewModel.id_ong
+    } else {
+        0
+    }
+    
+    val userTipo = sharedViewModel.tipo_usuario
     
     // Estado para controlar a exibição do modal
     var mostrarModalEdicao by remember { mutableStateOf(false) }
@@ -74,27 +70,56 @@ fun PerfilScreen(
     // Estado para controlar se há modificações pendentes
     var temModificacoesPendentes by remember { mutableStateOf(false) }
     
-    // Função para buscar dados da API (fallback)
-    fun buscarDadosAPI() {
+    // Função para carregar dados do usuário da API
+    fun carregarDadosUsuario() {
+        if (userId == 0 || userTipo.isEmpty()) {
+            errorMessage = "Usuário não logado"
+            isLoading = false
+            return
+        }
+        
+        isLoading = true
+        errorMessage = null
+        
+        Log.d("PerfilScreen", "Carregando dados do usuário - ID: $userId, Tipo: $userTipo")
+        
         when (userTipo.lowercase()) {
             "pessoa" -> {
-                RetrofitFactory().getUserService().usuarioPorId(userId).enqueue(object : Callback<UserCadastro> {
-                    override fun onResponse(call: Call<UserCadastro>, response: Response<UserCadastro>) {
+                Log.d("PerfilScreen", "Chamando API para usuário ID: $userId")
+                RetrofitFactory().getUserService().usuarioPorId(userId).enqueue(object : Callback<ResponseCadastro> {
+                    override fun onResponse(call: Call<ResponseCadastro>, response: Response<ResponseCadastro>) {
+                        Log.d("PerfilScreen", "Resposta da API recebida - Status: ${response.code()}")
                         isLoading = false
                         if (response.isSuccessful) {
-                            response.body()?.let { usuario ->
-                                perfilUsuario = usuario
-                                Log.d("PerfilScreen", "Dados do usuário carregados da API: ${usuario.nome}")
+                            response.body()?.let { responseBody ->
+                                Log.d("PerfilScreen", "Resposta recebida: ${responseBody.status}")
+                                if (responseBody.status) {
+                                    val usuario = responseBody.usuario
+                                    Log.d("PerfilScreen", "Usuário recebido: ${usuario.nome}, Email: ${usuario.email}")
+                                    perfilUsuario = UserCadastro(
+                                        id = usuario.id,
+                                        nome = usuario.nome,
+                                        email = usuario.email,
+                                        cpf = usuario.cpf,
+                                        telefone = usuario.telefone,
+                                        foto = usuario.foto
+                                    )
+                                    Log.d("PerfilScreen", "Dados do usuário carregados da API: ${usuario.nome}")
+                                } else {
+                                    errorMessage = responseBody.message
+                                }
                             } ?: run {
+                                Log.d("PerfilScreen", "Response body é nulo")
                                 errorMessage = "Dados do usuário não encontrados"
                             }
                         } else {
+                            Log.d("PerfilScreen", "Resposta não bem-sucedida: ${response.code()}")
                             errorMessage = "Erro ao carregar dados do usuário"
                             Log.e("PerfilScreen", "Erro na resposta: ${response.code()}")
                         }
                     }
                     
-                    override fun onFailure(call: Call<UserCadastro>, t: Throwable) {
+                    override fun onFailure(call: Call<ResponseCadastro>, t: Throwable) {
                         isLoading = false
                         errorMessage = "Falha na conexão"
                         Log.e("PerfilScreen", "Erro na requisição", t)
@@ -102,29 +127,40 @@ fun PerfilScreen(
                 })
             }
             "ong" -> {
-                RetrofitFactory().getUserService().ongPorId(userId).enqueue(object : Callback<OngResponse> {
-                    override fun onResponse(call: Call<OngResponse>, response: Response<OngResponse>) {
+                Log.d("PerfilScreen", "Chamando API para ONG ID: $userId")
+                RetrofitFactory().getUserService().ongPorId(userId).enqueue(object : Callback<OngResponseWrapper> {
+                    override fun onResponse(call: Call<OngResponseWrapper>, response: Response<OngResponseWrapper>) {
+                        Log.d("PerfilScreen", "Resposta da API recebida - Status: ${response.code()}")
                         isLoading = false
                         if (response.isSuccessful) {
-                            response.body()?.let { ongResponse ->
-                                perfilOng = OngsCadastro(
-                                    id = ongResponse.id,
-                                    nome = ongResponse.nome,
-                                    email = ongResponse.email,
-                                    telefone = ongResponse.telefone,
-                                    foto = ongResponse.foto
-                                )
-                                Log.d("PerfilScreen", "Dados da ONG carregados da API: ${ongResponse.nome}")
+                            response.body()?.let { responseBody ->
+                                Log.d("PerfilScreen", "Resposta recebida: ${responseBody.status}")
+                                if (responseBody.status) {
+                                    val ong = responseBody.ong
+                                    Log.d("PerfilScreen", "ONG recebida: ${ong.nome}, Email: ${ong.email}")
+                                    perfilOng = OngsCadastro(
+                                        id = ong.id,
+                                        nome = ong.nome,
+                                        email = ong.email,
+                                        telefone = ong.telefone,
+                                        foto = ong.foto
+                                    )
+                                    Log.d("PerfilScreen", "Dados da ONG carregados da API: ${ong.nome}")
+                                } else {
+                                    errorMessage = responseBody.message
+                                }
                             } ?: run {
+                                Log.d("PerfilScreen", "Response body é nulo")
                                 errorMessage = "Dados da ONG não encontrados"
                             }
                         } else {
+                            Log.d("PerfilScreen", "Resposta não bem-sucedida: ${response.code()}")
                             errorMessage = "Erro ao carregar dados da ONG"
                             Log.e("PerfilScreen", "Erro na resposta: ${response.code()}")
                         }
                     }
 
-                    override fun onFailure(call: Call<OngResponse>, t: Throwable) {
+                    override fun onFailure(call: Call<OngResponseWrapper>, t: Throwable) {
                         isLoading = false
                         errorMessage = "Falha na conexão"
                         Log.e("PerfilScreen", "Erro na requisição", t)
@@ -138,77 +174,15 @@ fun PerfilScreen(
         }
     }
     
-    // Função para carregar dados do usuário
-    fun carregarDadosUsuario() {
-        if (userId == 0 || userTipo.isEmpty()) {
+    // Efeito para carregar os dados do usuário quando a tela for exibida
+    LaunchedEffect(userId, userTipo) {
+        if (userId != 0 && userTipo.isNotEmpty()) {
+            Log.d("PerfilScreen", "Iniciando carregamento do perfil...")
+            Log.d("PerfilScreen", "User ID: $userId, Tipo: $userTipo")
+            carregarDadosUsuario()
+        } else {
             errorMessage = "Usuário não logado"
             isLoading = false
-            return
-        }
-        
-        isLoading = true
-        errorMessage = null
-        
-        Log.d("PerfilScreen", "Carregando dados do usuário - ID: $userId, Tipo: $userTipo")
-        
-        // Primeiro, tentar carregar dados do SharedPreferences
-        val dataComplete = sharedPreferences.getBoolean("user_data_complete", false)
-        
-        if (dataComplete) {
-            // Carregar dados do SharedPreferences
-            Log.d("PerfilScreen", "Carregando dados do SharedPreferences")
-            
-            when (userTipo.lowercase()) {
-                "pessoa" -> {
-                    perfilUsuario = UserCadastro(
-                        id = sharedPreferences.getInt("user_id", 0),
-                        nome = sharedPreferences.getString("user_nome", "") ?: "",
-                        email = sharedPreferences.getString("user_email", "") ?: "",
-                        cpf = sharedPreferences.getString("user_cpf", "") ?: "",
-                        telefone = sharedPreferences.getString("user_telefone", "") ?: "",
-                        foto = sharedPreferences.getString("user_foto", "") ?: ""
-                    )
-                    Log.d("PerfilScreen", "Dados do usuário carregados do SharedPreferences: ${perfilUsuario?.nome}")
-                }
-                "ong" -> {
-                    perfilOng = OngsCadastro(
-                        id = sharedPreferences.getInt("user_id", 0),
-                        nome = sharedPreferences.getString("user_nome", "") ?: "",
-                        email = sharedPreferences.getString("user_email", "") ?: "",
-                        telefone = sharedPreferences.getString("user_telefone", "") ?: "",
-                        foto = sharedPreferences.getString("user_foto", "") ?: ""
-                    )
-                    Log.d("PerfilScreen", "Dados da ONG carregados do SharedPreferences: ${perfilOng?.nome}")
-                }
-            }
-            isLoading = false
-        } else {
-            // Fallback: buscar dados da API
-            Log.d("PerfilScreen", "Dados não encontrados no SharedPreferences, buscando da API")
-            buscarDadosAPI()
-        }
-    }
-    
-    // Função para limpar dados do usuário (logout)
-    fun limparDadosUsuario() {
-        val editor = sharedPreferences.edit()
-        editor.clear()
-        editor.apply()
-        Log.d("PerfilScreen", "Dados do usuário limpos do SharedPreferences")
-    }
-    
-    // Efeito para carregar os dados do usuário quando a tela for exibida
-    LaunchedEffect(Unit) {
-        Log.d("PerfilScreen", "Iniciando carregamento do perfil...")
-        Log.d("PerfilScreen", "User ID: $userId, Tipo: $userTipo")
-        carregarDadosUsuario()
-    }
-    
-    // Efeito para observar mudanças no tipo de usuário
-    LaunchedEffect(userTipo) {
-        if (userTipo.isNotEmpty()) {
-            Log.d("PerfilScreen", "Tipo de usuário alterado: $userTipo")
-            carregarDadosUsuario()
         }
     }
     
@@ -290,18 +264,6 @@ fun PerfilScreen(
                 ) {
                     Button(
                         onClick = {
-                            // Salvar modificações no SharedPreferences
-                            perfilUsuario?.let { usuario ->
-                                val editor = sharedPreferences.edit()
-                                editor.putString("user_nome", usuario.nome)
-                                editor.putString("user_email", usuario.email)
-                                editor.putString("user_cpf", usuario.cpf)
-                                editor.putString("user_telefone", usuario.telefone)
-                                editor.putString("user_foto", usuario.foto)
-                                editor.apply()
-                                
-                                Log.d("PerfilScreen", "Dados atualizados no SharedPreferences")
-                            }
                             temModificacoesPendentes = false
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -464,7 +426,7 @@ fun PerfilScreen(
                     
                     // Email
                     Text(
-                        text = "Email: " + (perfilUsuario?.email ?: perfilOng?.email ?: "Não informado"),
+                        text = "Email: ${perfilUsuario?.email ?: perfilOng?.email ?: "Não informado"}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,
@@ -474,7 +436,7 @@ fun PerfilScreen(
                     // CPF (apenas para usuário pessoa)
                     perfilUsuario?.let { usuario ->
                         Text(
-                            text = "CPF: " + (usuario.cpf.ifEmpty { "Não informado" }),
+                            text = "CPF: ${usuario.cpf.ifEmpty { "Não informado" }}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             fontFamily = poppinsFamily,
@@ -484,7 +446,7 @@ fun PerfilScreen(
 
                     // Telefone
                     Text(
-                        text = "Telefone: " + (perfilUsuario?.telefone ?: perfilOng?.telefone ?: "Não informado"),
+                        text = "Telefone: ${perfilUsuario?.telefone ?: perfilOng?.telefone ?: "Não informado"}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = poppinsFamily,

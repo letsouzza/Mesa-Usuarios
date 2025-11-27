@@ -6,7 +6,7 @@ data class OngResponse(
     val email: String = "",
     val cnpj: String = "",
     val telefone: String = "",
-    val foto: String = "",
+    val foto: String? = "",
     val endereco: String = "",
     val descricao: String = ""
 )
