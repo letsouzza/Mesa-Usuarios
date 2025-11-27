@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -76,38 +77,43 @@ fun CardPedido(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Card(
-                modifier = Modifier.size(100.dp, 120.dp),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .size(100.dp, 120.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.2f))
             ) {
-                // Verifica se a imagem não está vazia e constrói a URL corretamente
-                if (!imagem.isNullOrEmpty()) {
-                    val imageUrl = when {
+                // Format the image URL if it exists
+                val imageUrl = if (!imagem.isNullOrEmpty()) {
+                    when {
                         imagem.startsWith("http") -> imagem
                         imagem.startsWith("//") -> "https:$imagem"
                         else -> "https://$imagem"
                     }
-                    
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Imagem do $alimento",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    // Exibe um placeholder quando não há imagem
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.LightGray.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
+                } else null
+                
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Imagem do $alimento",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    } else {
+                        // Show placeholder if no image URL is provided
                         Text(
                             text = "Sem imagem",
-                            color = Color.Gray,
-                            fontSize = 12.sp
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            fontFamily = poppinsFamily
                         )
                     }
                 }
@@ -115,12 +121,15 @@ fun CardPedido(
 
             Spacer(modifier = Modifier.width(16.dp))
 
+            // Informações do pedido
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(120.dp),
+                    .height(120.dp)
+                    .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Nome do alimento
                 Text(
                     text = alimento,
                     fontSize = 20.sp,

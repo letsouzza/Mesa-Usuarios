@@ -131,7 +131,6 @@ fun CardAlimento(
                         modifier = Modifier
                             .size(24.dp),
                         shape = CircleShape,
-                        colors = CardDefaults.cardColors(Color.Magenta)
                     ) {
                         AsyncImage(
                             model = imgEmpresa,

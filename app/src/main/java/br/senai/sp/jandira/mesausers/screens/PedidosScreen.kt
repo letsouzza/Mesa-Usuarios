@@ -66,46 +66,48 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
     val isLoading = remember { mutableStateOf(true) }
     val errorMessage by sharedViewModel.errorMessage.observeAsState(initial = null)
 
-    LaunchedEffect(Unit) {
-        // Se já temos os pedidos no ViewModel, não precisa buscar novamente
-        if (sharedViewModel.pedidos.value == null || sharedViewModel.pedidos.value.isNullOrEmpty()) {
-            // Busca os pedidos do usuário
-            val call = RetrofitFactory().getPedidoService().getPedidos(
-                mapOf("id_usuario" to sharedViewModel.id_usuario.toString())
-            )
-            
-            call.enqueue(object : Callback<ListPedidosResponse> {
-                override fun onResponse(call: Call<ListPedidosResponse>, response: Response<ListPedidosResponse>) {
-                    isLoading.value = false
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()
-                        if (responseBody?.status == true) {
-                            sharedViewModel.updatePedidos(responseBody.pedidos)
+    // Função para carregar os pedidos
+    fun carregarPedidos() {
+        isLoading.value = true
+        // Busca os pedidos do usuário
+        val call = RetrofitFactory().getPedidoService().getPedidos(
+            mapOf("id_usuario" to sharedViewModel.id_usuario.toString())
+        )
+        
+        call.enqueue(object : Callback<ListPedidosResponse> {
+            override fun onResponse(call: Call<ListPedidosResponse>, response: Response<ListPedidosResponse>) {
+                isLoading.value = false
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody?.status == true) {
+                        sharedViewModel.updatePedidos(responseBody.pedidos)
 
-                            val pedidos = responseBody?.pedidos
-                            if (pedidos == null || pedidos.isEmpty()) {
-                                sharedViewModel.setErrorMessage("Você ainda não fez nenhum pedido.")
-                            } else {
-                                sharedViewModel.setErrorMessage(null)
-                            }
+                        val pedidos = responseBody.pedidos
+                        if (pedidos == null || pedidos.isEmpty()) {
+                            sharedViewModel.setErrorMessage("Você ainda não fez nenhum pedido.")
                         } else {
-                            sharedViewModel.setErrorMessage(responseBody?.message ?: "Erro ao carregar pedidos")
+                            sharedViewModel.setErrorMessage(null)
                         }
                     } else {
-                        sharedViewModel.setErrorMessage("Erro de servidor: ${response.code()}")
-                        Log.e("PedidosScreen", "Erro na resposta: ${response.errorBody()?.string()}")
+                        sharedViewModel.setErrorMessage(responseBody?.message ?: "Erro ao carregar pedidos")
                     }
+                } else {
+                    sharedViewModel.setErrorMessage("Erro de servidor: ${response.code()}")
+                    Log.e("PedidosScreen", "Erro na resposta: ${response.errorBody()?.string()}")
                 }
+            }
 
-                override fun onFailure(call: Call<ListPedidosResponse>, t: Throwable) {
-                    isLoading.value = false
-                    sharedViewModel.setErrorMessage("Falha na conexão. Verifique sua internet.")
-                    Log.e("PedidosScreen", "Falha na requisição", t)
-                }
-            })
-        } else {
-            isLoading.value = false
-        }
+            override fun onFailure(call: Call<ListPedidosResponse>, t: Throwable) {
+                isLoading.value = false
+                sharedViewModel.setErrorMessage("Falha na conexão. Verifique sua internet.")
+                Log.e("PedidosScreen", "Falha na requisição", t)
+            }
+        })
+    }
+
+    // Carrega os pedidos quando a tela é exibida
+    LaunchedEffect(Unit) {
+        carregarPedidos()
     }
 
     fun deletarPedido(
@@ -208,6 +210,9 @@ fun PedidosScreen(navegacao: NavHostController?, sharedViewModel: SharedViewMode
                             }
                             items(pedidosState!!) { pedido ->
                                 val position = pedidosState?.indexOfFirst { it.idPedido == pedido.idPedido } ?: -1
+                                // Add this inside your items loop in PedidosScreen.kt
+                                Log.d("PedidosScreen", "Image URL for ${pedido.nomeAlimento}: ${pedido.imagemAlimento}")
+
                                 if (position != -1) {
                                     CardPedido(
                                         alimento = pedido.nomeAlimento,

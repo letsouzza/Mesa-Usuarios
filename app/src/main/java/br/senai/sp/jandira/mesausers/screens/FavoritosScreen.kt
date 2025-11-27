@@ -55,53 +55,56 @@ fun FavoritosScreen(
     val isLoading = remember { mutableStateOf(true) }
     val errorMessage by sharedViewModel.errorMessage.observeAsState(initial = null)
 
-    LaunchedEffect(Unit) {
-        if (sharedViewModel.favoritos.value == null || sharedViewModel.favoritos.value.isNullOrEmpty()) {
-            // Busca os favoritos do usuário
-            val call = RetrofitFactory().getFavoritoService().getFavoritos(
-                mapOf("id_usuario" to sharedViewModel.id_usuario.toString())
-            )
+    // Função para carregar os favoritos
+    fun carregarFavoritos() {
+        isLoading.value = true
+        // Busca os favoritos do usuário
+        val call = RetrofitFactory().getFavoritoService().getFavoritos(
+            mapOf("id_usuario" to sharedViewModel.id_usuario.toString())
+        )
 
-            call.enqueue(object : Callback<ListFavoritosResponse> {
-                override fun onResponse(
-                    call: Call<ListFavoritosResponse>,
-                    response: Response<ListFavoritosResponse>
-                ) {
-                    isLoading.value = false
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()
-                        if (responseBody?.status == true) {
-                            sharedViewModel.updateFavoritos(responseBody.favoritos)
+        call.enqueue(object : Callback<ListFavoritosResponse> {
+            override fun onResponse(
+                call: Call<ListFavoritosResponse>,
+                response: Response<ListFavoritosResponse>
+            ) {
+                isLoading.value = false
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody?.status == true) {
+                        sharedViewModel.updateFavoritos(responseBody.favoritos)
 
-                            val favoritos = responseBody?.favoritos
-                            if (favoritos == null || favoritos.isEmpty()) {
-                                sharedViewModel.setErrorMessage("Você adicionou nehuma empresa aos favoritos")
-                            } else {
-                                sharedViewModel.setErrorMessage(null)
-                            }
+                        val favoritos = responseBody.favoritos
+                        if (favoritos == null || favoritos.isEmpty()) {
+                            sharedViewModel.setErrorMessage("Você ainda não adicionou nenhuma empresa aos favoritos")
                         } else {
-                            sharedViewModel.setErrorMessage(
-                                responseBody?.message ?: "Erro ao carregar empresas favoritas"
-                            )
+                            sharedViewModel.setErrorMessage(null)
                         }
                     } else {
-                        sharedViewModel.setErrorMessage("Erro de servidor: ${response.code()}")
-                        Log.e(
-                            "FavoritosScreen",
-                            "Erro na resposta: ${response.errorBody()?.string()}"
+                        sharedViewModel.setErrorMessage(
+                            responseBody?.message ?: "Erro ao carregar empresas favoritas"
                         )
                     }
+                } else {
+                    sharedViewModel.setErrorMessage("Erro de servidor: ${response.code()}")
+                    Log.e(
+                        "FavoritosScreen",
+                        "Erro na resposta: ${response.errorBody()?.string()}"
+                    )
                 }
+            }
 
-                override fun onFailure(call: Call<ListFavoritosResponse>, t: Throwable) {
-                    isLoading.value = false
-                    sharedViewModel.setErrorMessage("Falha na conexão. Verifique sua internet.")
-                    Log.e("FavoritosScreen", "Falha na requisição", t)
-                }
-            })
-        } else {
-            isLoading.value = false
-        }
+            override fun onFailure(call: Call<ListFavoritosResponse>, t: Throwable) {
+                isLoading.value = false
+                sharedViewModel.setErrorMessage("Falha na conexão. Verifique sua internet.")
+                Log.e("FavoritosScreen", "Falha na requisição", t)
+            }
+        })
+    }
+
+    // Carrega os favoritos quando a tela é exibida
+    LaunchedEffect(Unit) {
+        carregarFavoritos()
     }
 
     fun deletarFavorito(

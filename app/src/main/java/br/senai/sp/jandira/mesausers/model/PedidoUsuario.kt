@@ -14,7 +14,7 @@ data class PedidoUsuario(
     @SerializedName("id_tipo_peso") val idTipoPeso: String?,
     val tipo: String,
     @SerializedName("data_de_validade") val dataValidade: String?,
-    @SerializedName("imagem_alimento") val imagemAlimento: String?,
+    @SerializedName("imagem") val imagemAlimento: String?,
     @SerializedName("id_empresa") val idEmpresa: String,
     @SerializedName("nome_empresa") val nomeEmpresa: String,
     @SerializedName("foto_empresa") val imagemEmpresa: String?
