@@ -82,7 +82,11 @@ fun formatarDataSegura(dataString: String?): String {
 }
 
 @Composable
-fun InstituicaoScreen(navegacao: NavHostController?, empresaId: Int, sharedViewModel: SharedViewModel) {
+fun InstituicaoScreen(
+    navegacao: NavHostController?, 
+    empresaId: Int = -1,  // Default value for when no ID is provided
+    sharedViewModel: SharedViewModel
+) {
 
     // Estados da UI
     var empresa = remember { mutableStateOf<Empresa?>(null) }

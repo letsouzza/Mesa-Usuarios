@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PersonPin
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -25,6 +26,20 @@ fun BarraInferior(controleNavegacao: NavHostController?) {
             .fillMaxWidth(),
         containerColor = Color(0xFF1B4227)
     ){
+        NavigationBarItem(
+            onClick = {
+                controleNavegacao!!.navigate("mapa")
+            },
+            selected = false,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Map,
+                    contentDescription = "Mapa",
+                    Modifier.size(40.dp),
+                    tint = Color(0xFFB9CE5D)
+                )
+            }
+        )
         NavigationBarItem(
             onClick = {
                 controleNavegacao!!.navigate("home")

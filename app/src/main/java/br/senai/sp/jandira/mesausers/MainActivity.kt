@@ -21,6 +21,7 @@ import br.senai.sp.jandira.mesausers.screens.FavoritosScreen
 import br.senai.sp.jandira.mesausers.screens.HomeScreen
 import br.senai.sp.jandira.mesausers.screens.InstituicaoScreen
 import br.senai.sp.jandira.mesausers.screens.LoginScreen
+import br.senai.sp.jandira.mesausers.screens.MapScreen
 import br.senai.sp.jandira.mesausers.screens.PedidosScreen
 import br.senai.sp.jandira.mesausers.screens.PerfilScreen
 import br.senai.sp.jandira.mesausers.screens.RecuperacaoSenha
@@ -55,14 +56,25 @@ class MainActivity : ComponentActivity() {
                     DetalhesScreen(navegacao, alimentoId, sharedViewModel)
                 }
                 composable(route = "perfil"){ PerfilScreen(navegacao , sharedViewModel) }
-                composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
                 composable(route = "favoritos"){ FavoritosScreen(navegacao, sharedViewModel) }
+                composable(route = "mapa"){ MapScreen(navController = navegacao) }
+                composable(route = "pedidos"){ PedidosScreen(navegacao, sharedViewModel) }
+                composable(route = "instituicao"){ 
+                    InstituicaoScreen(
+                        navegacao = navegacao, 
+                        sharedViewModel = sharedViewModel
+                    ) 
+                }
                 composable(
                     route = "instituicao/{empresaId}",
                     arguments = listOf(navArgument("empresaId") { type = NavType.IntType })
                 ) { backStackEntry ->
                     val empresaId = backStackEntry.arguments?.getInt("empresaId") ?: 0
-                    InstituicaoScreen(navegacao, empresaId, sharedViewModel)
+                    InstituicaoScreen(
+                        navegacao = navegacao, 
+                        empresaId = empresaId, 
+                        sharedViewModel = sharedViewModel
+                    )
                 }
             }
         }
